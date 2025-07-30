@@ -1,104 +1,14 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbyEf7ZRhoBh_va-y81IfWsNaoMvAFDXGH4sIKOIEj0wkqSOfz4alvu7tnYJe6fufrobow/exec",
-  meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
-  diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
-  diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-};
-
-// Estado del calendario para cada albergue
-const estadoCalendario = {
-  maestro: { mes: new Date().getMonth(), año: new Date().getFullYear() },
-  tinku: { mes: new Date().getMonth(), año: new Date().getFullYear() },
-  aquilina: { mes: new Date().getMonth(), año: new Date().getFullYear() }
-};
-
-// Cache de fechas ocupadas (se actualizará desde Google Sheets)
-let fechasOcupadas = {
-  maestro: [],
-  tinku: [],
-  aquilina: []
-};
-
-// Capacidades de los albergues
-const capacidades = {
-  maestro: 92,
-  tinku: 49,
-  aquilina: 58
-};
-
-// Ocupación actual (se actualizará desde Google Sheets)
-let ocupacionActual = {
-  maestro: 32,
-  tinku: 29,
-  aquilina: 26
-};
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbyiyNqnKRfywGxpW7uhFgJgH_fFtZRrkutUW40m3tz7bD6Xk7sPN4W0xqwshwoaYJD1/exec"};
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
   setMinDates();
   setupDateListeners();
   setupFormListeners();
-  cargarDatosIniciales();
 });
-
-// Función para cargar datos iniciales desde Google Sheets
-async function cargarDatosIniciales() {
-  try {
-    const response = await fetch(CONFIG.googleScriptUrl, {
-      method: "POST",
-      body: JSON.stringify({
-        secret: CONFIG.secretKey,
-        action: "obtenerReservas",
-        fechaInicio: formatDate(new Date()),
-        fechaFin: formatDate(new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-      }),
-      headers: { "Content-Type": "application/json" }
-    });
-    
-    const data = await response.json();
-    
-    if (data.success) {
-      // Procesar las reservas para actualizar fechasOcupadas
-      data.reservas.forEach(reserva => {
-        const albergueKey = getAlbergueKey(reserva.albergue);
-        if (albergueKey) {
-          // Agregar todas las fechas entre ingreso y salida
-          const fechaInicio = new Date(reserva.fechaIngreso);
-          const fechaFin = new Date(reserva.fechaSalida);
-          
-          for (let d = new Date(fechaInicio); d <= fechaFin; d.setDate(d.getDate() + 1)) {
-            if (!fechasOcupadas[albergueKey].some(f => f.toDateString() === d.toDateString())) {
-              fechasOcupadas[albergueKey].push(new Date(d));
-            }
-          }
-        }
-      });
-    }
-  } catch (error) {
-    console.error("Error al cargar datos iniciales:", error);
-  }
-}
-
-// Funciones para manejar modales
-function openModal(albergue) {
-  document.getElementById(`modal-${albergue}`).classList.add('active');
-  document.body.style.overflow = 'hidden';
-  generarCalendario(albergue);
-}
-
-function closeModal(albergue) {
-  document.getElementById(`modal-${albergue}`).classList.remove('active');
-  document.body.style.overflow = 'auto';
-}
-
-window.onclick = function(event) {
-  if (event.target.classList.contains('modal') && event.target.classList.contains('active')) {
-    const albergue = event.target.id.split('-')[1];
-    closeModal(albergue);
-  }
-};
 
 // Configuración de listeners de formularios
 function setupFormListeners() {
@@ -117,41 +27,49 @@ function setupFormListeners() {
 async function submitForm(albergue) {
   const formData = getFormData(albergue);
   
-  if (!validateForm(formData)) return;
-  
-  // Verificar disponibilidad antes de enviar
-  const disponibilidad = await verificarDisponibilidad(albergue, formData.fechaIngreso, formData.fechaSalida, formData.cantidad);
-  
-  if (!disponibilidad.disponible) {
-    alert('No hay disponibilidad para las fechas seleccionadas. Por favor elija otras fechas.');
+  if (!validateForm(formData)) {
     return;
   }
   
-  // Enviar a Google Sheets
-  const resultado = await enviarReservaAGoogleSheets({
-    ...formData,
-    albergue
-  });
-  
-  if (resultado.success) {
-    mostrarConfirmacion(albergue, formData, resultado.idReserva);
-    resetForm(albergue);
-    closeModal(albergue);
+  try {
+    // Mostrar feedback al usuario
+    const submitBtn = document.querySelector(`#reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)} button[type="submit"]`);
+    const btnOriginalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
     
-    // Actualizar cache local
-    actualizarCacheLocal(albergue, formData.fechaIngreso, formData.fechaSalida);
-  } else {
-    alert(`Error al realizar la reserva: ${resultado.message}`);
+    // Enviar a Google Sheets
+    const resultado = await enviarReservaAGoogleSheets({
+      ...formData,
+      albergue
+    });
+    
+    if (resultado.success) {
+      mostrarConfirmacion(albergue, formData);
+      resetForm(albergue);
+      closeModal(albergue);
+    } else {
+      alert(`Error al realizar la reserva: ${resultado.message}`);
+    }
+  } catch (error) {
+    console.error("Error en submitForm:", error);
+    alert("Ocurrió un error al procesar la reserva. Por favor intente nuevamente.");
+  } finally {
+    const submitBtn = document.querySelector(`#reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)} button[type="submit"]`);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Confirmar Reserva';
+    }
   }
 }
 
-// Helper functions
+// Helper functions básicas
 function getFormData(albergue) {
   return {
-    institucion: document.getElementById(`institucion-${albergue}`).value,
-    responsable: document.getElementById(`responsable-${albergue}`).value,
-    contacto: document.getElementById(`contacto-${albergue}`).value,
-    cantidad: document.getElementById(`cantidad-${albergue}`).value,
+    institucion: document.getElementById(`institucion-${albergue}`).value.trim(),
+    responsable: document.getElementById(`responsable-${albergue}`).value.trim(),
+    contacto: document.getElementById(`contacto-${albergue}`).value.trim(),
+    cantidad: parseInt(document.getElementById(`cantidad-${albergue}`).value),
     fechaIngreso: document.getElementById(`fechaIngreso-${albergue}`).value,
     horaIngreso: document.getElementById(`horaIngreso-${albergue}`).value,
     fechaSalida: document.getElementById(`fechaSalida-${albergue}`).value,
@@ -161,7 +79,9 @@ function getFormData(albergue) {
 
 function validateForm(formData) {
   // Validación básica de campos requeridos
-  if (Object.values(formData).some(val => !val)) {
+  if (!formData.institucion || !formData.responsable || !formData.contacto || 
+      isNaN(formData.cantidad) || !formData.fechaIngreso || !formData.horaIngreso || 
+      !formData.fechaSalida || !formData.horaSalida) {
     alert('Por favor complete todos los campos del formulario');
     return false;
   }
@@ -175,17 +95,23 @@ function validateForm(formData) {
     return false;
   }
   
+  // Validación de cantidad
+  if (formData.cantidad < 1) {
+    alert('La cantidad de personas debe ser al menos 1');
+    return false;
+  }
+  
   return true;
 }
 
-function mostrarConfirmacion(albergue, formData, idReserva) {
+function mostrarConfirmacion(albergue, formData) {
   const nombresAlbergues = {
     maestro: 'Albergue Maestro José Fierro',
     tinku: 'Albergue Tinku Huasi',
     aquilina: 'Albergue Aquilina Soldati'
   };
   
-  alert(`¡Reserva #${idReserva} realizada con éxito!\n\n` +
+  alert(`¡Reserva realizada con éxito!\n\n` +
         `Institución: ${formData.institucion}\n` +
         `Responsable: ${formData.responsable}\n` +
         `Contacto: ${formData.contacto}\n` +
@@ -197,17 +123,6 @@ function mostrarConfirmacion(albergue, formData, idReserva) {
 
 function resetForm(albergue) {
   document.getElementById(`reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)}`).reset();
-}
-
-function actualizarCacheLocal(albergue, fechaIngreso, fechaSalida) {
-  const inicio = new Date(fechaIngreso);
-  const fin = new Date(fechaSalida);
-  
-  for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
-    if (!fechasOcupadas[albergue].some(f => f.toDateString() === d.toDateString())) {
-      fechasOcupadas[albergue].push(new Date(d));
-    }
-  }
 }
 
 // Funciones para fechas
@@ -229,115 +144,6 @@ function setupDateListeners() {
       });
     }
   });
-}
-
-function formatDate(date) {
-  return date.toISOString().split('T')[0];
-}
-
-function getAlbergueKey(albergueNombre) {
-  if (albergueNombre.includes('Maestro')) return 'maestro';
-  if (albergueNombre.includes('Tinku')) return 'tinku';
-  if (albergueNombre.includes('Aquilina')) return 'aquilina';
-  return null;
-}
-
-// Funciones para el calendario
-function generarCalendario(albergue) {
-  const estado = estadoCalendario[albergue];
-  const { mes, año } = estado;
-  
-  const primerDia = new Date(año, mes, 1);
-  const ultimoDia = new Date(año, mes + 1, 0);
-  const primerDiaSemana = primerDia.getDay();
-  const diasEnMes = ultimoDia.getDate();
-  
-  const contenedor = document.getElementById(`calendario-${albergue}`);
-  contenedor.innerHTML = '';
-  
-  // Encabezados de días
-  CONFIG.diasSemanaCortos.forEach(dia => {
-    const diaHeader = document.createElement('div');
-    diaHeader.className = 'dia-header';
-    diaHeader.textContent = dia;
-    contenedor.appendChild(diaHeader);
-  });
-  
-  // Días del mes anterior
-  const diasMesAnterior = new Date(año, mes, 0).getDate();
-  for (let i = primerDiaSemana - 1; i >= 0; i--) {
-    contenedor.appendChild(crearDiaElemento(diasMesAnterior - i, 'otro-mes'));
-  }
-  
-  // Días del mes actual
-  const hoy = new Date();
-  for (let i = 1; i <= diasEnMes; i++) {
-    const fechaActual = new Date(año, mes, i);
-    const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fechaActual.toDateString());
-    
-    const dia = crearDiaElemento(i, estaOcupado ? 'ocupado' : '');
-    
-    if (fechaActual.toDateString() === hoy.toDateString()) {
-      dia.classList.add('hoy');
-    }
-    
-    if (!estaOcupado && !dia.classList.contains('otro-mes')) {
-      dia.addEventListener('click', () => mostrarInfoDia(albergue, año, mes, i));
-    }
-    
-    contenedor.appendChild(dia);
-  }
-  
-  // Días del mes siguiente
-  const totalCeldas = 42; // 6 filas x 7 días
-  const diasMesSiguiente = totalCeldas - (primerDiaSemana + diasEnMes);
-  
-  for (let i = 1; i <= diasMesSiguiente; i++) {
-    contenedor.appendChild(crearDiaElemento(i, 'otro-mes'));
-  }
-  
-  // Actualizar título del mes
-  document.getElementById(`mes-actual-${albergue}`).textContent = 
-    `${CONFIG.meses[mes]} ${año}`;
-}
-
-function crearDiaElemento(numero, claseExtra = '') {
-  const dia = document.createElement('div');
-  dia.className = `dia ${claseExtra}`;
-  dia.textContent = numero;
-  return dia;
-}
-
-function mostrarInfoDia(albergue, año, mes, dia) {
-  const fecha = new Date(año, mes, dia);
-  const diaSemana = CONFIG.diasSemana[fecha.getDay()];
-  const mesNombre = CONFIG.meses[mes];
-  
-  const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
-  const disponibles = capacidades[albergue] - ocupacionActual[albergue];
-  
-  const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
-                  `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
-                  `Capacidad total: ${capacidades[albergue]} personas\n` +
-                  `Personas ocupadas: ${ocupacionActual[albergue]} personas\n` +
-                  `Disponibles: ${disponibles} personas`;
-  
-  alert(mensaje);
-}
-
-function cambiarMes(albergue, direccion) {
-  estadoCalendario[albergue].mes += direccion;
-  
-  // Ajustar año si es necesario
-  if (estadoCalendario[albergue].mes < 0) {
-    estadoCalendario[albergue].mes = 11;
-    estadoCalendario[albergue].año--;
-  } else if (estadoCalendario[albergue].mes > 11) {
-    estadoCalendario[albergue].mes = 0;
-    estadoCalendario[albergue].año++;
-  }
-  
-  generarCalendario(albergue);
 }
 
 // Función para enviar datos a Google Sheets (MODIFICADA PARA FORM-DATA)
@@ -384,29 +190,39 @@ async function enviarReservaAGoogleSheets(data) {
   }
 }
 
-async function verificarDisponibilidad(albergue, fechaIngreso, fechaSalida, cantidad) {
-  try {
-    const albergueNombre = data.albergue === 'maestro' ? 'Maestro José Fierro' : 
-                         data.albergue === 'tinku' ? 'Tinku Huasi' : 'Aquilina Soldati';
-    
-    const payload = {
-      secret: CONFIG.secretKey,
-      action: "verificarDisponibilidad",
-      albergue: albergueNombre,
-      fechaIngreso,
-      fechaSalida,
-      cantidad: parseInt(cantidad)
-    };
-
-    const response = await fetch(CONFIG.googleScriptUrl, {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: { "Content-Type": "application/json" }
-    });
-    
-    return await response.json();
-  } catch (error) {
-    console.error("Error al verificar disponibilidad:", error);
-    return { disponible: false, message: "Error al verificar disponibilidad" };
-  }
+// Funciones de modales
+function openModal(albergue) {
+  document.getElementById(`modal-${albergue}`).classList.add('active');
+  document.body.style.overflow = 'hidden';
 }
+
+function closeModal(albergue) {
+  document.getElementById(`modal-${albergue}`).classList.remove('active');
+  document.body.style.overflow = 'auto';
+}
+
+window.onclick = function(event) {
+  if (event.target.classList.contains('modal') && event.target.classList.contains('active')) {
+    const albergue = event.target.id.split('-')[1];
+    closeModal(albergue);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializa sliders para cada albergue
+  document.querySelectorAll('.glide').forEach(element => {
+    new Glide(element, {
+      type: 'carousel',
+      perView: 1,
+      autoplay: 4000,
+      hoverpause: false, // Cambiado a true para mejor UX
+      animationDuration: 2000,
+      gap: 0
+    }).mount();
+  });
+
+  // Resto de tu código de inicialización...
+  setMinDates();
+  setupDateListeners();
+  cargarDatosIniciales();
+});
