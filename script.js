@@ -1,7 +1,7 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbwQZGirxGLQ3TnLn-wN0RZarznOzyomlXM38vHvaKONWNeYkj3b1Mzf2Beb0XzzHAXa/exec"};
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbyiyNqnKRfywGxpW7uhFgJgH_fFtZRrkutUW40m3tz7bD6Xk7sPN4W0xqwshwoaYJD1/exec"};
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
