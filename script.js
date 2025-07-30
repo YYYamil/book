@@ -52,12 +52,17 @@ async function submitForm(albergue) {
     return;
   }
   
+  let submitBtn = null;
   try {
-    // Mostrar feedback al usuario
-    const submitBtn = document.querySelector(`#reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)} button[type="submit"]`);
-    const btnOriginalText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    // Intentar encontrar el botón de envío
+    submitBtn = document.querySelector(`#reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)} button[type="submit"]`);
+    if (!submitBtn) {
+      console.warn(`Botón de envío no encontrado para el formulario reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)}`);
+    } else {
+      const btnOriginalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    }
     
     // Enviar a Google Sheets
     const resultado = await enviarReservaAGoogleSheets({
@@ -76,8 +81,10 @@ async function submitForm(albergue) {
     console.error("Error en submitForm:", error);
     alert("Ocurrió un error al procesar la reserva. Por favor intente nuevamente.");
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Confirmar Reserva';
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Confirmar Reserva';
+    }
     formSubmissionStates[albergue] = false;
   }
 }
