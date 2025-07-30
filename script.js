@@ -1,7 +1,15 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbyiyNqnKRfywGxpW7uhFgJgH_fFtZRrkutUW40m3tz7bD6Xk7sPN4W0xqwshwoaYJD1/exec"};
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbwQZGirxGLQ3TnLn-wN0RZarznOzyomlXM38vHvaKONWNeYkj3b1Mzf2Beb0XzzHAXa/exec"
+};
+
+// Estado para prevenir envíos duplicados
+const formSubmissionStates = {
+  maestro: false,
+  tinku: false,
+  aquilina: false
+};
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,19 +23,32 @@ function setupFormListeners() {
   ['maestro', 'tinku', 'aquilina'].forEach(albergue => {
     const form = document.getElementById(`reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)}`);
     if (form) {
-      form.addEventListener('submit', function(e) {
+      // Remover cualquier listener existente para evitar duplicados
+      form.removeEventListener('submit', form._submitHandler);
+      // Asignar nuevo listener
+      form._submitHandler = function(e) {
         e.preventDefault();
         submitForm(albergue);
-      });
+      };
+      form.addEventListener('submit', form._submitHandler);
     }
   });
 }
 
 // Función principal para enviar formularios
 async function submitForm(albergue) {
+  // Prevenir envíos duplicados
+  if (formSubmissionStates[albergue]) {
+    console.log(`Envío ya en curso para ${albergue}. Ignorando.`);
+    return;
+  }
+
+  formSubmissionStates[albergue] = true;
+
   const formData = getFormData(albergue);
   
   if (!validateForm(formData)) {
+    formSubmissionStates[albergue] = false;
     return;
   }
   
@@ -55,11 +76,9 @@ async function submitForm(albergue) {
     console.error("Error en submitForm:", error);
     alert("Ocurrió un error al procesar la reserva. Por favor intente nuevamente.");
   } finally {
-    const submitBtn = document.querySelector(`#reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)} button[type="submit"]`);
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Confirmar Reserva';
-    }
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Confirmar Reserva';
+    formSubmissionStates[albergue] = false;
   }
 }
 
@@ -146,7 +165,7 @@ function setupDateListeners() {
   });
 }
 
-// Función para enviar datos a Google Sheets (MODIFICADA PARA FORM-DATA)
+// Función para enviar datos a Google Sheets
 async function enviarReservaAGoogleSheets(data) {
   try {
     const albergueNombre = {
