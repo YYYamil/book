@@ -7,11 +7,11 @@
     <title>Sistema de Reservas - Ministerio de Educación de Tucumán</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Glide.js/3.5.0/css/glide.core.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Glide.js/3.5.0/css/glide.theme.min.css">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="data:,">
 </head>
 <body>
-    <body>
 <header>
     <div class="container">
         <div class="header-content">
@@ -26,7 +26,6 @@
         </div>
     </div>
 </header>
-
     <div class="container">
         <div class="main-title">
             <h2>Reserva de Albergues</h2>
@@ -36,7 +35,25 @@
         <div class="albergues-container">
             <!-- Albergue Maestro José Fierro -->
             <div class="albergue-card">
-                <div class="card-image" style="background-image: url('https://placehold.co/600x400/005CA2/FFFFFF?text=Albergue+Maestro+José+Fierro');"></div>
+                <div class="card-image">
+                    <div class="glide">
+                        <div class="glide__track" data-glide-el="track">
+                          <ul class="glide__slides">
+                            <li class="glide__slide">
+                              <img src="Img/jose-fierro/20180407_143307 (1).jpg" alt="...">
+                            </li>
+                            <li class="glide__slide">
+                                <img src="Img/jose-fierro/Gin5K2tWoAEgoet.jpg" alt="...">
+                            </li>
+                            <!-- más slides -->
+                          </ul>
+                        </div>
+                        <div class="glide__arrows" data-glide-el="controls">
+                          <button class="glide__arrow glide__arrow--left" data-glide-dir="<">‹</button>
+                          <button class="glide__arrow glide__arrow--right" data-glide-dir=">">›</button>
+                        </div>
+                      </div>
+                </div>
                 <div class="card-header">
                     <div class="albergue-header">
                         <h3 class="albergue-title">Albergue Maestro <br>José Fierro</h3>
@@ -83,7 +100,25 @@
 
             <!-- Albergue Tinku Huasi -->
             <div class="albergue-card tinku">
-                <div class="card-image" style="background-image: url('https://placehold.co/600x400/84CFED/005CA2?text=Albergue+Tinku+Huasi');"></div>
+                <div class="card-image">
+                    <div class="glide">
+                        <div class="glide__track" data-glide-el="track">
+                          <ul class="glide__slides">
+                            <li class="glide__slide">
+                              <img src="Img/jose-fierro/20180407_143307 (1).jpg" alt="...">
+                            </li>
+                            <li class="glide__slide">
+                                <img src="Img/jose-fierro/Gin5K2tWoAEgoet.jpg" alt="...">
+                            </li>
+                            <!-- más slides -->
+                          </ul>
+                        </div>
+                        <div class="glide__arrows" data-glide-el="controls">
+                          <button class="glide__arrow glide__arrow--left" data-glide-dir="<">‹</button>
+                          <button class="glide__arrow glide__arrow--right" data-glide-dir=">">›</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-header">
                     <div class="albergue-header">
                         <h3 class="albergue-title">Albergue Tinku <br>Huasi</h3>
@@ -130,7 +165,25 @@
 
             <!-- Albergue Aquilina Soldati -->
             <div class="albergue-card alquilina">
-                <div class="card-image" style="background-image: url('https://placehold.co/600x400/FEC800/333333?text=Albergue+Aquilina+Soldati');"></div>
+                <div class="card-image">
+                    <div class="glide">
+                        <div class="glide__track" data-glide-el="track">
+                          <ul class="glide__slides">
+                            <li class="glide__slide">
+                              <img src="Img/jose-fierro/20180407_143307 (1).jpg" alt="...">
+                            </li>
+                            <li class="glide__slide">
+                                <img src="Img/jose-fierro/Gin5K2tWoAEgoet.jpg" alt="...">
+                            </li>
+                            <!-- más slides -->
+                          </ul>
+                        </div>
+                        <div class="glide__arrows" data-glide-el="controls">
+                          <button class="glide__arrow glide__arrow--left" data-glide-dir="<">‹</button>
+                          <button class="glide__arrow glide__arrow--right" data-glide-dir=">">›</button>
+                        </div>
+                      </div>
+                </div>
                 <div class="card-header">
                     <div class="albergue-header">
                         <h3 class="albergue-title">Albergue Aquilina <br>Soldati</h3>
@@ -188,7 +241,7 @@
                 <div class="disponibilidad-section">
                     <div class="disponibilidad-title">
                         <i class="fas fa-chart-bar"></i>
-                        Disponibilidad actual
+                       Disponibilidad actual
                     </div>
                     <div class="ocupacion-container">
                         <div class="ocupacion-bar">
@@ -422,12 +475,22 @@
 
     <footer>
         <div class="container">
-            <p>Desarrollado por la Dirección de Informática</p>
-            <p>Ministerio de Educación de Tucumán © 2025</p>
+            <div class="footer-content">
+                <img src="img/3 - Blanco.png" alt="Logo Ministerio" class="footer-logo">
+                <div class="footer-text">
+                    <p>© 2025 Ministerio de Educación de Tucumán. Todos los derechos reservados</p>
+                </div>
+            </div>
         </div>
     </footer>
+ 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Glide.js/3.5.0/glide.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
 
-    <script>
+
+    <!-- <script>
         // Estado del calendario para cada albergue
         const estadoCalendario = {
             maestro: { mes: new Date().getMonth(), año: new Date().getFullYear() },
@@ -716,8 +779,8 @@
             setMinDates();
             setupDateListeners();
         });
-    </script>
-</body>
+    </script> -->
+<!-- </body>
     <script src="script.js"></script>
 </body>
-</html>
+</html> -->

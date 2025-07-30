@@ -207,3 +207,23 @@ window.onclick = function(event) {
     closeModal(albergue);
   }
 };
+
+///////////////////////////////
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializa sliders para cada albergue
+  document.querySelectorAll('.glide').forEach(element => {
+    new Glide(element, {
+      type: 'carousel',
+      perView: 1,
+      autoplay: 4000,
+      hoverpause: false, // Cambiado a true para mejor UX
+      animationDuration: 2000,
+      gap: 0
+    }).mount();
+  });
+
+  // Resto de tu código de inicialización...
+  setMinDates();
+  setupDateListeners();
+  cargarDatosIniciales();
+}); 
