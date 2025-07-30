@@ -168,7 +168,9 @@ async function enviarReservaAGoogleSheets(data) {
     formData.append("fechaSalida", data.fechaSalida);
     formData.append("horaSalida", data.horaSalida);
 
-    console.log("Enviando datos al servidor:", Object.fromEntries(formData)); // Log para depuración
+    const formDataObj = {};
+    formData.forEach((value, key) => (formDataObj[key] = value));
+    console.log("Enviando datos al servidor:", formDataObj);
 
     const response = await fetch(CONFIG.googleScriptUrl, {
       method: "POST",
@@ -176,7 +178,7 @@ async function enviarReservaAGoogleSheets(data) {
     });
 
     const responseData = await response.json();
-    console.log("Respuesta del servidor:", responseData); // Log para depuración
+    console.log("Respuesta del servidor:", responseData);
     return responseData;
   } catch (error) {
     console.error("Error al enviar reserva:", error);
