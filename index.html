@@ -11,6 +11,48 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Glide.js/3.5.0/css/glide.theme.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
+
+<div id="modal" style="display: none;" class="modal-overlay">
+  <div class="modal-content">
+    <h2>Formulario de Reserva</h2>
+    <form id="form-reserva" onsubmit="submitForm(event)">
+      <input type="hidden" id="albergue" name="albergue" />
+
+      <label>Institución:</label>
+      <input type="text" name="institucion" required />
+
+      <label>Responsable:</label>
+      <input type="text" name="responsable" required />
+
+      <label>Contacto:</label>
+      <input type="text" name="contacto" required />
+
+      <label>Cantidad:</label>
+      <input type="number" name="cantidad" required />
+
+      <label>Fecha de Ingreso:</label>
+      <input type="date" name="fechaIngreso" class="fecha-input" required />
+
+      <label>Hora de Ingreso:</label>
+      <input type="time" name="horaIngreso" required />
+
+      <label>Fecha de Salida:</label>
+      <input type="date" name="fechaSalida" required />
+
+      <label>Hora de Salida:</label>
+      <input type="time" name="horaSalida" required />
+
+      <div class="ocupacion-bar">
+        <div class="ocupacion-fill" style="width: 0%; background: green; height: 10px;"></div>
+      </div>
+      <div class="ocupacion-info">Selecciona una fecha para ver disponibilidad.</div>
+
+      <button type="submit">Enviar Reserva</button>
+      <button type="button" onclick="closeModal()">Cancelar</button>
+    </form>
+  </div>
+</div>
+
 <body>
 <header>
     <div class="container">
@@ -97,7 +139,7 @@
                             <span>Área de recreación</span>
                         </div>
                     </div>
-                    <button class="btn-reservar" onclick="openModal('maestro')">Reservar Ahora</button>
+                    <button class="btn-reservar" onclick="openModal('Maestro José Fierro')">Reservar Ahora</button>
                     <div class="map-container">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3558.3469779765946!2d-65.19288722381081!3d-26.89248109236016!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94225a28fd68b2a5%3A0x9e70e2029ffb5445!2sAlbergue%20Maestro%20Jos%C3%A9%20Fierro!5e0!3m2!1sen!2sar!4v1753473767982!5m2!1sen!2sar" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
@@ -168,7 +210,7 @@
                             <span>Área de lavandería</span>
                         </div>
                     </div>
-                    <button class="btn-reservar tinku" onclick="openModal('tinku')">Reservar Ahora</button>
+                    <button class="btn-reservar tinku" onclick="openModal('Tinku Huasi')">Reservar Ahora</button>
                     <div class="map-container">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3561.0615264368676!2d-65.2531118238137!3d-26.806169488762055!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94225df192f9345f%3A0x7a6e80a152e8999d!2sAlbergue%20Tinku%20Huasi!5e0!3m2!1sen!2sar!4v1753473842656!5m2!1sen!2sar" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
@@ -239,7 +281,7 @@
                             <span>Patio exterior</span>
                         </div>
                     </div>
-                    <button class="btn-reservar alquilina" onclick="openModal('aquilina')">Reservar Ahora</button>
+                    <button class="btn-reservar alquilina" onclick="openModal('Aquilina Soldati')">Reservar Ahora</button>
                     <div class="map-container">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3578.830146788623!2d-65.49806782383205!3d-26.234707965218533!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9418bd7589be37d9%3A0x56985f9492fd5f84!2sAquilina%20Soldatti%20De%20%C3%81lvarez!5e0!3m2!1sen!2sar!4v1753473913567!5m2!1sen!2sar" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
