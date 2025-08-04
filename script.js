@@ -1,8 +1,8 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbyiyNqnKRfywGxpW7uhFgJgH_fFtZRrkutUW40m3tz7bD6Xk7sPN4W0xqwshwoaYJD1/exec"};
-
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbwjx_Nxl7UrsHkNFFBQsd3Ba1Dx4Fv4HSAJMLErgQq3TQK76q7CKG6RIsnHi_Ssz0FF/exec"};
+  
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
   setMinDates();
@@ -133,18 +133,55 @@ function setMinDates() {
   });
 }
 
+// function setupDateListeners() {
+//   ['maestro', 'tinku', 'aquilina'].forEach(albergue => {
+//     const ingresoInput = document.getElementById(`fechaIngreso-${albergue}`);
+//     const salidaInput = document.getElementById(`fechaSalida-${albergue}`);
+    
+//     if (ingresoInput && salidaInput) {
+//       ingresoInput.addEventListener('change', function() {
+//         salidaInput.min = this.value;
+//       });
+//     }
+//   });
+// }
+
 function setupDateListeners() {
   ['maestro', 'tinku', 'aquilina'].forEach(albergue => {
     const ingresoInput = document.getElementById(`fechaIngreso-${albergue}`);
     const salidaInput = document.getElementById(`fechaSalida-${albergue}`);
     
-    if (ingresoInput && salidaInput) {
-      ingresoInput.addEventListener('change', function() {
+    if (ingresoInput) {
+      ingresoInput.addEventListener('change', async function() {
         salidaInput.min = this.value;
+
+        // Lógica nueva para mostrar plazas restantes
+        const nombres = {
+          maestro: "Maestro José Fierro",
+          tinku: "Tinku Huasi",
+          aquilina: "Aquilina Soldati"
+        };
+        const nombreAlbergue = nombres[albergue];
+
+        const respuesta = await consultarDisponibilidadPorFecha(nombreAlbergue, this.value);
+
+        if (respuesta.success) {
+          const info = document.querySelector(`#modal-${albergue} .ocupacion-info`);
+          if (info) {
+            info.textContent = `${respuesta.ocupados}/${respuesta.capacidad} personas ocupadas (${respuesta.disponibles} disponibles)`;
+          }
+
+          const fill = document.querySelector(`#modal-${albergue} .ocupacion-fill`);
+          if (fill) {
+            const porcentaje = Math.round((respuesta.ocupados / respuesta.capacidad) * 100);
+            fill.style.width = `${porcentaje}%`;
+          }
+        }
       });
     }
   });
 }
+
 
 // Función para enviar datos a Google Sheets (MODIFICADA PARA FORM-DATA)
 async function enviarReservaAGoogleSheets(data) {
@@ -194,7 +231,16 @@ async function enviarReservaAGoogleSheets(data) {
 
 async function obtenerDisponibilidadPorAlbergue(albergueNombre) {
   try {
-    const response = await fetch(`${CONFIG.googleScriptUrl}?action=getDisponibilidad`);
+    const formData = new FormData();
+    formData.append("secret", CONFIG.secretKey);
+    formData.append("action", "getDisponibilidad");
+    formData.append("albergue", albergueNombre);
+
+    const response = await fetch(CONFIG.googleScriptUrl, {
+      method: "POST",
+      body: formData
+    });
+
     const json = await response.json();
     if (!json.success) {
       console.warn("Error al obtener disponibilidad:", json.message);
@@ -207,6 +253,7 @@ async function obtenerDisponibilidadPorAlbergue(albergueNombre) {
     return [];
   }
 }
+
 async function mostrarDisponibilidadActual(albergue) {
   const nombres = {
     maestro: 'Maestro José Fierro',
@@ -274,31 +321,30 @@ document.addEventListener('DOMContentLoaded', function() {
   // Resto de tu código de inicialización...
   setMinDates();
   setupDateListeners();
-  cargarDatosIniciales();
+  //cargarDatosIniciales();
 });
 
 
 //Nueva funcion para DISPONIBILIDAD
 
-async function cargarDisponibilidadDesdeServidor() {
+async function consultarDisponibilidadPorFecha(albergueNombre, fecha) {
   try {
-    const response = await fetch(`${CONFIG.googleScriptUrl}?action=getDisponibilidad`);
-    const data = await response.json();
+    const formData = new FormData();
+    formData.append("secret", CONFIG.secretKey);
+    formData.append("action", "obtenerDisponibilidadDia");
+    formData.append("albergue", albergueNombre);
+    formData.append("fecha", fecha);
 
-    if (!data.success) {
-      console.warn("Error al obtener disponibilidad:", data.message);
-      return {};
-    }
-
-    const disponibilidad = {};
-    data.data.forEach(entry => {
-      const clave = `${entry.fecha}_${entry.albergue}`;
-      disponibilidad[clave] = entry;
+    const response = await fetch(CONFIG.googleScriptUrl, {
+      method: "POST",
+      body: formData
     });
 
-    return disponibilidad;
-  } catch (err) {
-    console.error("Error al cargar disponibilidad:", err);
-    return {};
+    const json = await response.json();
+    return json;
+  } catch (error) {
+    console.error("Error al consultar disponibilidad:", error);
+    return { success: false, message: "Error en la consulta" };
   }
 }
+
