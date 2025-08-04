@@ -190,10 +190,60 @@ async function enviarReservaAGoogleSheets(data) {
   }
 }
 
+//31/7 DISPONIBILIDAD
+
+async function obtenerDisponibilidadPorAlbergue(albergueNombre) {
+  try {
+    const response = await fetch(`${CONFIG.googleScriptUrl}?action=getDisponibilidad`);
+    const json = await response.json();
+    if (!json.success) {
+      console.warn("Error al obtener disponibilidad:", json.message);
+      return [];
+    }
+
+    return json.data.filter(entry => entry.albergue === albergueNombre);
+  } catch (err) {
+    console.error("Error al obtener disponibilidad:", err);
+    return [];
+  }
+}
+async function mostrarDisponibilidadActual(albergue) {
+  const nombres = {
+    maestro: 'Maestro José Fierro',
+    tinku: 'Tinku Huasi',
+    aquilina: 'Aquilina Soldati'
+  };
+
+  const disponibilidad = await obtenerDisponibilidadPorAlbergue(nombres[albergue]);
+
+  // Tomar fecha de hoy como referencia
+  const hoy = new Date();
+  const hoyStr = hoy.toISOString().split("T")[0];
+
+  const datoHoy = disponibilidad.find(d => d.fecha === hoyStr);
+
+  const capacidad = datoHoy ? parseInt(datoHoy.capacidad) : 0;
+  const ocupados = datoHoy ? parseInt(datoHoy.ocupados) : 0;
+  const disponibles = datoHoy ? parseInt(datoHoy.disponibles) : capacidad;
+
+  const porcentaje = Math.round((ocupados / capacidad) * 100);
+
+  const fill = document.querySelector(`#modal-${albergue} .ocupacion-fill`);
+  const info = document.querySelector(`#modal-${albergue} .ocupacion-info`);
+
+  if (fill) fill.style.width = `${porcentaje}%`;
+  if (info) info.textContent = `${ocupados}/${capacidad} personas ocupadas`;
+}
+
+
+
+
 // Funciones de modales
 function openModal(albergue) {
   document.getElementById(`modal-${albergue}`).classList.add('active');
   document.body.style.overflow = 'hidden';
+
+   mostrarDisponibilidadActual(albergue); //DISPONIBILIDAD
 }
 
 function closeModal(albergue) {
@@ -226,3 +276,29 @@ document.addEventListener('DOMContentLoaded', function() {
   setupDateListeners();
   cargarDatosIniciales();
 });
+
+
+//Nueva funcion para DISPONIBILIDAD
+
+async function cargarDisponibilidadDesdeServidor() {
+  try {
+    const response = await fetch(`${CONFIG.googleScriptUrl}?action=getDisponibilidad`);
+    const data = await response.json();
+
+    if (!data.success) {
+      console.warn("Error al obtener disponibilidad:", data.message);
+      return {};
+    }
+
+    const disponibilidad = {};
+    data.data.forEach(entry => {
+      const clave = `${entry.fecha}_${entry.albergue}`;
+      disponibilidad[clave] = entry;
+    });
+
+    return disponibilidad;
+  } catch (err) {
+    console.error("Error al cargar disponibilidad:", err);
+    return {};
+  }
+}
