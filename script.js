@@ -1,6 +1,6 @@
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbyNG4Wa6OB0buTmo6f594Blj6xs6--wFmvhFXTQOoPhpQiHsQU0OxGH28aVyj5f2eNK/exec"};
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbx7u9ZhDOmm6ZGnuUQEEsFe06_uH4vjdN64zTvYWXAlNfXBayttydaREd2LZbwYeGzj/exec"};
 
 
 // ======= CALENDARIO =======
@@ -211,3 +211,41 @@ window.openModal = openModal;
 window.closeModal = closeModal;
 window.submitForm = submitForm;
 window.cambiarMes = cambiarMes;
+
+
+
+document.getElementById("btnTestReserva").addEventListener("click", async () => {
+    const hoy = new Date();
+    const fechaIngreso = hoy.toISOString().split('T')[0];
+    const fechaSalida = fechaIngreso;
+
+    const datos = {
+        secret: "cristiano1988",
+        action: "crearReserva",
+        albergue: "Aquilina Soldati",  // cambiar si querés otro
+        institucion: "Test Automático",
+        responsable: "Bot de Prueba",
+        contacto: "0000-0000",
+        cantidad: 10,
+        fechaIngreso,
+        horaIngreso: "10:00",
+        fechaSalida,
+        horaSalida: "12:00"
+    };
+
+    console.log("🧪 Enviando reserva automática:", datos);
+
+    try {
+        const response = await fetch(URL_GOOGLE_SCRIPT, {
+            method: "POST",
+            body: new URLSearchParams(datos)
+        });
+
+        const json = await response.json();
+        console.log("✅ Respuesta de prueba:", json);
+        alert(json.success ? "Reserva de prueba creada exitosamente ✅" : "Error en reserva de prueba ❌");
+    } catch (error) {
+        console.error("❌ Error al enviar reserva de prueba:", error);
+        alert("Error técnico al enviar reserva de prueba ❌");
+    }
+});
