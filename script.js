@@ -1,7 +1,7 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbxun2scS8MhF_y9-pGBGsJ-aFHuIB78ackBRJjDEFeKqqTZEm48OgeHbAJGON7x2Tap/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbw9lwmJaA-tU_N4umHiIETCsKb_e2nwn4c1EGOI2-MdfmJNakcr4qrawml_2DzULG1K/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -30,9 +30,9 @@ const capacidades = {
 
 // Ocupación actual (se actualizará desde Google Sheets)
 let ocupacionActual = {
-  maestro: 32,
-  tinku: 29,
-  aquilina: 26
+  maestro: 0,
+  tinku: 0,
+  aquilina: 0
 };
 
 // Estado para prevenir envíos dobles
@@ -346,4 +346,78 @@ async function enviarReservaAGoogleSheets(data) {
     console.error(`Error al enviar reserva para ${data.albergue}: ${error}`);
     return { success: false, message: "Error de conexión" };
   }
+}
+
+
+// Función para obtener disponibilidad desde Google Sheets
+async function obtenerDisponibilidadDia(albergue, fecha) {
+  try {
+    console.log(`Enviando solicitud POST para albergue: ${albergue}, fecha: ${fecha}`);
+    const response = await fetch('https://script.google.com/macros/s/AKfycbw9lwmJaA-tU_N4umHiIETCsKb_e2nwn4c1EGOI2-MdfmJNakcr4qrawml_2DzULG1K/exec', {
+      method: 'POST',
+      body: JSON.stringify({
+        secret: 'cristiano1988',
+        action: 'obtenerDisponibilidadDia',
+        albergue,
+        fecha
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const resultado = await response.json();
+    console.log('Respuesta de Apps Script:', resultado);
+
+    if (resultado.success) {
+      return {
+        ocupados: resultado.ocupados,
+        disponibles: resultado.disponibles,
+        capacidad: resultado.capacidad
+      };
+    } else {
+      console.error(`Error en la respuesta de Apps Script: ${resultado.message}`);
+      alert(`Error al obtener disponibilidad: ${resultado.message}`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error en fetch: ${error.message}`);
+    alert(`Error al conectar con el servidor: ${error.message}`);
+    return null;
+  }
+}
+
+// Función para mostrar información del día seleccionado
+async function mostrarInfoDia(albergue, año, mes, dia) {
+  const fecha = new Date(año, mes, dia);
+  const fechaFormateada = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`; // Formato yyyy-MM-dd
+  const diaSemana = CONFIG.diasSemana[fecha.getDay()];
+  const mesNombre = CONFIG.meses[mes];
+
+  console.log(`mostrarInfoDia llamado para albergue: ${albergue}, fecha: ${fechaFormateada}`);
+
+  // Obtener disponibilidad desde Google Sheets
+  const disponibilidad = await obtenerDisponibilidadDia(albergue, fechaFormateada);
+  
+  let ocupados = 0;
+  let disponibles = capacidades[albergue]; // Valor por defecto
+  let capacidad = capacidades[albergue];
+
+  if (disponibilidad) {
+    ocupados = disponibilidad.ocupados;
+    disponibles = disponibilidad.disponibles;
+    capacidad = disponibilidad.capacidad;
+    // Actualizar ocupacionActual
+    ocupacionActual[albergue] = ocupados;
+  } else {
+    console.error('No se obtuvo disponibilidad, usando valores por defecto');
+    alert('No se pudo obtener la disponibilidad, mostrando valores por defecto');
+  }
+
+  const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
+
+  const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
+                  `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
+                  `Capacidad total: ${capacidad} personas\n` +
+                  `Personas ocupadas: ${ocupados} personas\n` +
+                  `Disponibles: ${disponibles} personas`;
+
+  alert(mensaje);
 }
