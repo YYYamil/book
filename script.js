@@ -1,7 +1,7 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbw9lwmJaA-tU_N4umHiIETCsKb_e2nwn4c1EGOI2-MdfmJNakcr4qrawml_2DzULG1K/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycby5lWozyLNL3thQGYLO8o8KhnAibopLs8HWQGsUF8TFnpWZzZO1AsId_pU9ozBbgRSc/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
