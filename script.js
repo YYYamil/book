@@ -353,7 +353,7 @@ async function enviarReservaAGoogleSheets(data) {
 async function obtenerDisponibilidadDia(albergue, fecha) {
   try {
     console.log(`Enviando solicitud POST para albergue: ${albergue}, fecha: ${fecha}`);
-    const response = await fetch('https://script.google.com/macros/s/AKfycbw9lwmJaA-tU_N4umHiIETCsKb_e2nwn4c1EGOI2-MdfmJNakcr4qrawml_2DzULG1K/exec', {
+    const response = await fetch('https://script.google.com/macros/s/AKfycby5lWozyLNL3thQGYLO8o8KhnAibopLs8HWQGsUF8TFnpWZzZO1AsId_pU9ozBbgRSc/exec', {
       method: 'POST',
       body: JSON.stringify({
         secret: 'cristiano1988',
