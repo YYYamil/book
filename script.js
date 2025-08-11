@@ -1,7 +1,7 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycby5lWozyLNL3thQGYLO8o8KhnAibopLs8HWQGsUF8TFnpWZzZO1AsId_pU9ozBbgRSc/exec",
+  googleScriptUrl: "https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycby5lWozyLNL3thQGYLO8o8KhnAibopLs8HWQGsUF8TFnpWZzZO1AsId_pU9ozBbgRSc/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -353,7 +353,7 @@ async function enviarReservaAGoogleSheets(data) {
 async function obtenerDisponibilidadDia(albergue, fecha) {
   try {
     console.log(`Enviando solicitud POST para albergue: ${albergue}, fecha: ${fecha}`);
-    const response = await fetch('https://script.google.com/macros/s/AKfycby5lWozyLNL3thQGYLO8o8KhnAibopLs8HWQGsUF8TFnpWZzZO1AsId_pU9ozBbgRSc/exec', {
+    const response = await fetch('https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycby5lWozyLNL3thQGYLO8o8KhnAibopLs8HWQGsUF8TFnpWZzZO1AsId_pU9ozBbgRSc/exec', {
       method: 'POST',
       body: JSON.stringify({
         secret: 'cristiano1988',
