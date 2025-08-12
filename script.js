@@ -109,38 +109,80 @@ function handleFormSubmit(e) {
   });
 }
 
+// async function submitForm(albergue) {
+//   console.log(`Iniciando envío de formulario para ${albergue}`);
+//   // Obtener valores del formulario
+//   const formData = getFormData(albergue);
+
+//   // Validación básica
+//   if (!formData.institucion || !formData.responsable || !formData.contacto || !formData.cantidad || !formData.fechaIngreso || !formData.horaIngreso) {
+//     console.log(`Validación fallida para ${albergue}`);
+//     alert("Por favor complete todos los campos del formulario");
+//     return;
+//   }
+
+//   // --- Enviar a Google Sheets ---
+//   const resultado = await enviarReservaAGoogleSheets(formData);
+
+//   if (resultado.success) {
+//     console.log(`Reserva exitosa para ${albergue}, ID: ${resultado.idReserva}`);
+//     mostrarConfirmacion(albergue, formData, resultado.idReserva);
+
+//     // Actualizar cache local si pernocta es true
+//     if (formData.pernocta) {
+//       actualizarCacheLocal(albergue, formData.fechaIngreso);
+//     }
+
+//     // Limpiar formulario y cerrar modal
+//     resetForm(albergue);
+//     closeModal(albergue);
+//   } else {
+//     console.log(`Error en reserva para ${albergue}: ${resultado.message}`);
+//     alert(`Error al guardar la reserva: ${resultado.message}`);
+//   }
+// }
+
 async function submitForm(albergue) {
   console.log(`Iniciando envío de formulario para ${albergue}`);
-  // Obtener valores del formulario
-  const formData = getFormData(albergue);
 
-  // Validación básica
-  if (!formData.institucion || !formData.responsable || !formData.contacto || !formData.cantidad || !formData.fechaIngreso || !formData.horaIngreso) {
-    console.log(`Validación fallida para ${albergue}`);
+  const formData = getFormData(albergue);
+  if (!formData.institucion || !formData.responsable || !formData.contacto ||
+      !formData.cantidad || !formData.fechaIngreso || !formData.horaIngreso) {
     alert("Por favor complete todos los campos del formulario");
     return;
   }
 
-  // --- Enviar a Google Sheets ---
-  const resultado = await enviarReservaAGoogleSheets(formData);
+  const btn = getSubmitButton(albergue);
+  setBtnLoading(btn);
 
-  if (resultado.success) {
-    console.log(`Reserva exitosa para ${albergue}, ID: ${resultado.idReserva}`);
-    mostrarConfirmacion(albergue, formData, resultado.idReserva);
+  try {
+    const resultado = await enviarReservaAGoogleSheets(formData);
 
-    // Actualizar cache local si pernocta es true
-    if (formData.pernocta) {
-      actualizarCacheLocal(albergue, formData.fechaIngreso);
+    if (resultado.success) {
+      // Actualizá lo que ya venías haciendo (cache, etc.)
+      mostrarConfirmacion(albergue, formData, resultado.idReserva);
+      if (formData.pernocta) actualizarCacheLocal(albergue, formData.fechaIngreso);
+
+      // ÉXITO visual en el botón
+      setBtnSuccess(btn);
+
+      // Espera breve para que el usuario vea la tilde y cerramos modal
+      setTimeout(() => {
+        resetForm(albergue);
+        closeModal(albergue);
+        resetBtn(btn); // listo para el próximo uso
+      }, 900);
+    } else {
+      alert(`Error al guardar la reserva: ${resultado.message}`);
+      resetBtn(btn);
     }
-
-    // Limpiar formulario y cerrar modal
-    resetForm(albergue);
-    closeModal(albergue);
-  } else {
-    console.log(`Error en reserva para ${albergue}: ${resultado.message}`);
-    alert(`Error al guardar la reserva: ${resultado.message}`);
+  } catch (err) {
+    console.error(err);
+    alert('Ocurrió un error al enviar la reserva. Intenta nuevamente.');
+    resetBtn(btn);
   }
 }
+
 
 // Helper functions
 function getFormData(albergue) {
@@ -169,14 +211,14 @@ function mostrarConfirmacion(albergue, formData, idReserva) {
     aquilina: 'Albergue Aquilina Soldati'
   };
 
-  alert(`¡Reserva #${idReserva} realizada con éxito!\n\n` +
-        `Institución: ${formData.institucion}\n` +
-        `Responsable: ${formData.responsable}\n` +
-        `Contacto: ${formData.contacto}\n` +
-        `Cantidad: ${formData.cantidad} personas\n` +
-        `Albergue: ${nombresAlbergues[albergue]}\n` +
-        `Ingreso: ${formData.fechaIngreso} a las ${formData.horaIngreso}\n` +
-        `Pernocta: ${formData.pernocta ? 'Sí' : 'No'}`);
+  // alert(`¡Reserva #${idReserva} realizada con éxito!\n\n` +
+  //       `Institución: ${formData.institucion}\n` +
+  //       `Responsable: ${formData.responsable}\n` +
+  //       `Contacto: ${formData.contacto}\n` +
+  //       `Cantidad: ${formData.cantidad} personas\n` +
+  //       `Albergue: ${nombresAlbergues[albergue]}\n` +
+  //       `Ingreso: ${formData.fechaIngreso} a las ${formData.horaIngreso}\n` +
+  //       `Pernocta: ${formData.pernocta ? 'Sí' : 'No'}`);
 }
 
 function resetForm(albergue) {
@@ -398,6 +440,10 @@ async function mostrarInfoDia(albergue, año, mes0, dia) {
 
   console.log(`mostrarInfoDia llamado para albergue: ${albergue}, fecha: ${fechaISO}`);
 
+  // ⬇️ Mostrar loader y bloquear interacción
+  showCalendarLoading(albergue);
+
+  try {
   // 1) Pedir disponibilidad real al GS
   const disponibilidad = await obtenerDisponibilidadDia(albergue, fechaISO);
 
@@ -416,17 +462,27 @@ async function mostrarInfoDia(albergue, año, mes0, dia) {
   const spanCap = document.getElementById(`capacidad-${albergue}`);
   if (spanCap) spanCap.textContent = capacidad;
 
-  // 4) (Opcional) Cartel informativo
-  const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
-  const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
-                  `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
-                  `Capacidad total: ${capacidad} personas\n` +
-                  `Personas ocupadas: ${ocupados} personas\n` +
-                  `Disponibles: ${disponibles} personas`;
-  alert(mensaje);
+  // // 4) (Opcional) Cartel informativo
+  // const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
+  // const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
+  //                 `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
+  //                 `Capacidad total: ${capacidad} personas\n` +
+  //                 `Personas ocupadas: ${ocupados} personas\n` +
+  //                 `Disponibles: ${disponibles} personas`;
+  // alert(mensaje);
 
   // 5) Actualizar barra y texto "X/Cap personas ocupadas"
   updateOcupacionUI(albergue, ocupados, capacidad);
+
+  // (opcional) tu alert informativo
+    // ...
+  } catch (e) {
+    console.error('Error al obtener disponibilidad:', e);
+    // Podés mostrar un mensaje inline si querés
+  } finally {
+    // ⬇️ Siempre ocultar loader y habilitar interacción
+    hideCalendarLoading(albergue);
+  }
 }
 
 
@@ -571,5 +627,64 @@ function updateOcupacionUI(albergue, ocupados, capacidad) {
   if (fill) fill.style.width = `${percent}%`;
 
   const info = document.getElementById(`ocupacion-info-${albergue}`);
-  if (info) info.textContent = `${ocupados}/${capacidad} personas ocupadas`;
+  if (info) info.textContent = `${ocupados}/${capacidad} Camas ocupadas`;
 }
+
+
+const isLoading = { maestro: false, tinku: false, aquilina: false };
+
+function showCalendarLoading(albergue) {
+  isLoading[albergue] = true;
+
+  const overlay = document.getElementById(`cal-loader-${albergue}`);
+  if (overlay) {
+    overlay.hidden = false;
+    overlay.setAttribute('aria-busy', 'true');
+  }
+
+  // Bloquear interacción en header y grid
+  const grid = document.getElementById(`calendario-${albergue}`);
+  if (grid) grid.classList.add('cal-block');
+
+  const header = document.querySelector(`#modal-${albergue} .calendario-header`);
+  if (header) header.classList.add('cal-block');
+}
+
+function hideCalendarLoading(albergue) {
+  isLoading[albergue] = false;
+
+  const overlay = document.getElementById(`cal-loader-${albergue}`);
+  if (overlay) {
+    overlay.hidden = true;
+    overlay.setAttribute('aria-busy', 'false');
+  }
+
+  const grid = document.getElementById(`calendario-${albergue}`);
+  if (grid) grid.classList.remove('cal-block');
+
+  const header = document.querySelector(`#modal-${albergue} .calendario-header`);
+  if (header) header.classList.remove('cal-block');
+}
+// para boton reserva vERDE
+function getSubmitButton(albergue){
+  const form = document.getElementById(`reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)}`);
+  return form ? form.querySelector('.btn-submit') : null;
+}
+function setBtnLoading(btn){
+  if(!btn) return;
+  btn.classList.remove('is-success');
+  btn.classList.add('is-loading');
+  btn.disabled = true;
+}
+function setBtnSuccess(btn){
+  if(!btn) return;
+  btn.classList.remove('is-loading');
+  btn.classList.add('is-success');
+  btn.disabled = true;
+}
+function resetBtn(btn){
+  if(!btn) return;
+  btn.classList.remove('is-loading','is-success');
+  btn.disabled = false;
+}
+

@@ -662,3 +662,136 @@
                 max-width: 210px;
             }
         }
+
+
+        .calendario-container { position: relative; }
+
+.cal-loader[hidden] { display: none; }
+.cal-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 247, 250, 0.6); /* tenue */
+  backdrop-filter: blur(1px);
+  z-index: 2;
+}
+
+/* Spinner */
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0,0,0,0.15);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Estado bloqueado: sin clicks y con leve atenuación */
+.cal-block {
+  pointer-events: none;
+  opacity: 0.6;
+}
+/* Para boton VERDE*/
+
+/* Botón base: mantenemos tu estilo + centrado perfecto */
+.btn-submit{
+  width: 100%;
+  background: linear-gradient(to right, var(--azul), #004a8c);
+  color: var(--blanco);
+  padding: 14px 25px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: 'Roboto', sans-serif;
+  margin-top: 20px;
+  box-shadow: 0 4px 10px rgba(0, 92, 162, 0.3);
+
+  /* centrado de contenido */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;      /* para centrar el icono por absolute */
+  gap: .5rem;
+}
+
+.btn-submit:disabled{ opacity: 0.9; cursor: not-allowed; }
+
+/* Etiqueta e ícono del botón */
+.btn-submit .btn-label{ transition: opacity .15s; }
+.btn-submit .btn-icon{
+  /* centrado absoluto, no depende del ancho del texto */
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 18px; height: 18px;
+  display: none;           /* visible solo en loading/success */
+}
+
+/* Estado: Cargando (spinner centrado) */
+.btn-submit.is-loading .btn-icon{
+  display: flex;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+.btn-submit.is-loading .btn-label{ opacity: 0; }   /* ocultar sin ocupar */
+@keyframes spin{ to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* Estado: Éxito (verde + tilde centrada) */
+.btn-submit.is-success{
+  background: #10b981;     /* verde */
+  box-shadow: 0 4px 10px rgba(16,185,129,.3);
+}
+.btn-submit.is-success .btn-icon{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-submit.is-success .btn-icon::before{
+  content: "✓";
+  font-size: 16px; line-height: 1; color: #fff;
+}
+.btn-submit.is-success .btn-label{ opacity: 0; }
+
+
+/* === Calendario: spinner fijo en su lugar === */
+.cal-loader .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0,0,0,0.15);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite; /* <- usa 'spin' */
+}
+
+/* SOLO rotación (no translate) */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* === Botón: spinner centrado absoluto === */
+.btn-submit .btn-icon{
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px; height: 18px;
+  display: none;
+}
+
+/* En carga, animación con translate + rotate */
+.btn-submit.is-loading .btn-icon{
+  display: flex;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin-center .8s linear infinite; /* <- usa 'spin-center' */
+}
+
+/* Rotación con el translate incluido para el ícono absoluto del botón */
+@keyframes spin-center {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}

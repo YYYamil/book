@@ -187,7 +187,7 @@
                 <div class="disponibilidad-section">
                     <div class="disponibilidad-title">
                         <i class="fas fa-chart-bar"></i>
-                        Ocupacion actual
+                        Seleccione el dia para realizar la reserva:
                     </div>
                     
                     <div class="ocupacion-container">
@@ -216,6 +216,12 @@
                         <div class="calendario-grid" id="calendario-maestro">
                             <!-- Calendario generado dinámicamente -->
                         </div>
+
+                        <!-- ⬇️ Overlay de carga -->
+                            <div class="cal-loader" id="cal-loader-maestro" aria-live="polite" aria-busy="false" hidden>
+                                <div class="spinner" role="status" aria-label="Cargando disponibilidad"></div>
+                            </div>
+
                     </div>
                 </div>
                 
@@ -259,7 +265,13 @@
                        
                     </div>
 
-                    <button type="submit" class="btn-submit">Confirmar Reserva</button>
+                    <!-- <button type="submit" class="btn-submit">Confirmar Reserva</button> -->
+
+                    <button type="submit" class="btn-submit" id="btn-submit-maestro">
+                        <span class="btn-icon" aria-hidden="true"></span>
+                        <span class="btn-label">Confirmar Reserva</span>
+                        </button>
+
                 </form>
             </div>
         </div>
