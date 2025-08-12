@@ -1,11 +1,21 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycby5lWozyLNL3thQGYLO8o8KhnAibopLs8HWQGsUF8TFnpWZzZO1AsId_pU9ozBbgRSc/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbyLjmLXc-9NkK6jbCxeZ3r3NSYV7x4TGatHWCncugnY4xKyVa7Epza7EH6rb7mAJEA-/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 };
+
+function toFullName(albergueKey) {
+  switch (albergueKey) {
+    case 'maestro':  return 'Maestro José Fierro';
+    case 'tinku':    return 'Tinku Huasi';
+    case 'aquilina': return 'Aquilina Soldati';
+    default:         return albergueKey; // fallback por si ya viene el nombre completo
+  }
+}
+
 
 // Estado del calendario para cada albergue
 const estadoCalendario = {
@@ -145,7 +155,9 @@ function getFormData(albergue) {
     cantidad: document.getElementById(`cantidad-${albergue}`).value,
     fechaIngreso: document.getElementById(`fechaIngreso-${albergue}`).value,
     horaIngreso: document.getElementById(`horaIngreso-${albergue}`).value,
-    pernocta: document.getElementById('pernocta-maestro').checked // <-- BOOLEANO nativo
+    //pernocta: document.getElementById('pernocta-maestro').checked // <-- BOOLEANO nativo
+    pernocta: pernoctaValue
+
   };
 }
 
@@ -291,6 +303,8 @@ function crearDiaElemento(numero, claseExtra = '') {
 //   const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
 //   const disponibles = capacidades[albergue] - ocupacionActual[albergue];
 
+  
+
 //   const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
 //                   `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
 //                   `Capacidad total: ${capacidades[albergue]} personas\n` +
@@ -299,6 +313,50 @@ function crearDiaElemento(numero, claseExtra = '') {
 
 //   alert(mensaje);
 // }
+
+
+// Debe ser async porque consulta al backend
+async function mostrarInfoDia(albergue, año, mes0, dia) {
+  const fecha = new Date(año, mes0, dia);
+  const fechaISO = `${año}-${String(mes0 + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+  const diaSemana = CONFIG.diasSemana[fecha.getDay()];
+  const mesNombre = CONFIG.meses[mes0];
+
+  console.log(`mostrarInfoDia llamado para albergue: ${albergue}, fecha: ${fechaISO}`);
+
+  // 1) Pedir disponibilidad real al GS
+  const disponibilidad = await obtenerDisponibilidadDia(albergue, fechaISO); // <-- esta función debe existir
+
+  // 2) Valores por defecto si no hay registro (capacidad máxima)
+  let ocupados = 0;
+  let capacidad = capacidades[albergue];
+  let disponibles = capacidad;
+
+  if (disponibilidad) {
+    ocupados = disponibilidad.ocupados;
+    capacidad = disponibilidad.capacidad;
+    disponibles = disponibilidad.disponibles;
+    // mantener cache local si lo usás
+    ocupacionActual[albergue] = ocupados;
+  } else {
+    console.error('No se obtuvo disponibilidad, usando valores por defecto');
+  }
+
+  // 3) Actualizar el modal con ids genéricos
+  const spanDisp = document.getElementById(`disponibles-${albergue}`);
+  if (spanDisp) spanDisp.textContent = disponibles;
+  const spanCap = document.getElementById(`capacidad-${albergue}`);
+  if (spanCap) spanCap.textContent = capacidad;
+
+  // 4) (Opcional) Cartel informativo
+  const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
+  const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
+                  `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
+                  `Capacidad total: ${capacidad} personas\n` +
+                  `Personas ocupadas: ${ocupados} personas\n` +
+                  `Disponibles: ${disponibles} personas`;
+  alert(mensaje);
+}
 
 function cambiarMes(albergue, direccion) {
   estadoCalendario[albergue].mes += direccion;
@@ -349,75 +407,79 @@ async function enviarReservaAGoogleSheets(data) {
 }
 
 
-// Función para obtener disponibilidad desde Google Sheets
-async function obtenerDisponibilidadDia(albergue, fecha) {
-  try {
-    console.log(`Enviando solicitud POST para albergue: ${albergue}, fecha: ${fecha}`);
-    const response = await fetch('https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycby5lWozyLNL3thQGYLO8o8KhnAibopLs8HWQGsUF8TFnpWZzZO1AsId_pU9ozBbgRSc/exec', {
-      method: 'POST',
-      body: JSON.stringify({
-        secret: 'cristiano1988',
-        action: 'obtenerDisponibilidadDia',
-        albergue,
-        fecha
-      }),
-      headers: { 'Content-Type': 'application/json' }
-    });
-    const resultado = await response.json();
-    console.log('Respuesta de Apps Script:', resultado);
 
-    if (resultado.success) {
-      return {
-        ocupados: resultado.ocupados,
-        disponibles: resultado.disponibles,
-        capacidad: resultado.capacidad
-      };
-    } else {
-      console.error(`Error en la respuesta de Apps Script: ${resultado.message}`);
-      alert(`Error al obtener disponibilidad: ${resultado.message}`);
-      return null;
-    }
-  } catch (error) {
-    console.error(`Error en fetch: ${error.message}`);
-    alert(`Error al conectar con el servidor: ${error.message}`);
-    return null;
+
+//DIARIA
+function toISODateYMD(dateObj) {
+  // dateObj es un Date del día cliqueado
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+async function fetchDisponiblesMaestro(fechaISO) {
+  const payload = new URLSearchParams({
+    secret: CONFIG.secretKey,
+    action: 'obtenerDisponibilidadDia',
+    fecha: fechaISO
+  });
+
+  const resp = await fetch(CONFIG.googleScriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: payload
+  });
+
+  const json = await resp.json();
+  if (!json.success) throw new Error(json.message || 'Error en servidor');
+  return json; // {fecha, albergue, capacidad, ocupados, disponibles}
+}
+
+
+// Llamalo cuando el usuario hace click en un día del calendario del modal "Maestro José Fierro"
+async function onCalendarDayClickMaestro(dateObj) {
+  try {
+    const fechaISO = toISODateYMD(dateObj);
+    const res = await fetchDisponiblesMaestro(fechaISO);
+
+    // Actualizar el modal (ejemplo: <span id="disponibles-maestro"></span>)
+    const spanDisp = document.getElementById('disponibles-maestro');
+    if (spanDisp) spanDisp.textContent = res.disponibles;
+
+    // Si además querés mostrar la capacidad:
+    const spanCap = document.getElementById('capacidad-maestro'); // opcional
+    if (spanCap) spanCap.textContent = res.capacidad;
+
+    // También podés guardar la fecha seleccionada en tu form:
+    const inputFecha = document.getElementById('fechaIngreso-maestro');
+    if (inputFecha) inputFecha.value = fechaISO;
+
+  } catch (e) {
+    console.error(e);
+    alert('No se pudo obtener la disponibilidad. Intenta de nuevo.');
   }
 }
 
-// Función para mostrar información del día seleccionado
-async function mostrarInfoDia(albergue, año, mes, dia) {
-  const fecha = new Date(año, mes, dia);
-  const fechaFormateada = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`; // Formato yyyy-MM-dd
-  const diaSemana = CONFIG.diasSemana[fecha.getDay()];
-  const mesNombre = CONFIG.meses[mes];
 
-  console.log(`mostrarInfoDia llamado para albergue: ${albergue}, fecha: ${fechaFormateada}`);
+async function obtenerDisponibilidadDia(albergueKey, fechaISO) {
+  const payload = new URLSearchParams({
+    secret: CONFIG.secretKey,
+    action: 'obtenerDisponibilidadDia',
+    albergue: toFullName(albergueKey), // nombre completo que matchea las hojas
+    fecha: fechaISO
+  });
 
-  // Obtener disponibilidad desde Google Sheets
-  const disponibilidad = await obtenerDisponibilidadDia(albergue, fechaFormateada);
-  
-  let ocupados = 0;
-  let disponibles = capacidades[albergue]; // Valor por defecto
-  let capacidad = capacidades[albergue];
+  const resp = await fetch(CONFIG.googleScriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: payload
+  });
 
-  if (disponibilidad) {
-    ocupados = disponibilidad.ocupados;
-    disponibles = disponibilidad.disponibles;
-    capacidad = disponibilidad.capacidad;
-    // Actualizar ocupacionActual
-    ocupacionActual[albergue] = ocupados;
-  } else {
-    console.error('No se obtuvo disponibilidad, usando valores por defecto');
-    alert('No se pudo obtener la disponibilidad, mostrando valores por defecto');
-  }
-
-  const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
-
-  const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
-                  `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
-                  `Capacidad total: ${capacidad} personas\n` +
-                  `Personas ocupadas: ${ocupados} personas\n` +
-                  `Disponibles: ${disponibles} personas`;
-
-  alert(mensaje);
+  const json = await resp.json();
+  if (!json.success) throw new Error(json.message || 'Error en servidor');
+  return {
+    ocupados: json.ocupados,
+    disponibles: json.disponibles,
+    capacidad: json.capacidad
+  };
 }
