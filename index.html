@@ -187,21 +187,24 @@
                 <div class="disponibilidad-section">
                     <div class="disponibilidad-title">
                         <i class="fas fa-chart-bar"></i>
-                        Disponibilidad actual
+                        Ocupacion actual
                     </div>
+                    
                     <div class="ocupacion-container">
                         <div class="ocupacion-bar">
-                            <div class="ocupacion-fill" style="width: 35%;"></div>
+                            <div class="ocupacion-fill" id="ocupacion-fill-maestro" style="width: 0%;"></div>
                         </div>
-                        <div class="ocupacion-info">92/92 personas ocupadas</div>
+                        <div class="ocupacion-info" id="ocupacion-info-maestro">—</div>
                     </div>
 
+                       
+
                     <!-- Dentro del modal de Maestro José Fierro -->
-<div class="disponibilidad">
-  Disponibles para la fecha: <span id="disponibles-maestro">—</span>
-  <!-- opcional: Capacidad -->
-  <!-- <small> / Capacidad: <span id="capacidad-maestro">—</span></small> -->
-</div>
+                        <div class="disponibilidad">
+                        Camas disponibles para la fecha seleccionada: <span id="disponibles-maestro">—</span>
+                        <!-- opcional: Capacidad -->
+                        <!-- <small> / Capacidad: <span id="capacidad-maestro">—</span></small> -->
+                        </div>
 
                     
                     <div class="calendario-container">
@@ -238,7 +241,7 @@
                             <div class="input-group">
                                 <input type="number" id="cantidad-maestro" class="form-control" min="1" max="92" required>
                                 <label for="pernocta-maestro" style="margin-left: 10px; line-height: 2.5;">
-                                    <input type="checkbox" id="pernocta-maestro"> Pernocta
+                                    <input type="checkbox" id="pernocta-maestro"> Reserva camas?
                                 </label>
                             </div>
                         </div>              

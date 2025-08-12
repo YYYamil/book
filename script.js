@@ -221,6 +221,27 @@ function formatDate(date) {
   return date.toISOString().split('T')[0];
 }
 
+function isoFromYMD(año, mes0, dia) {
+  return `${año}-${String(mes0 + 1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+}
+
+function setSelectedDate(albergue, iso, cell) {
+  estadoCalendario[albergue].selectedISO = iso;
+
+  // quitar selección anterior en este calendario
+  const grid = document.getElementById(`calendario-${albergue}`);
+  const prev = grid.querySelector('.dia.seleccionado');
+  if (prev) prev.classList.remove('seleccionado');
+
+  // marcar la nueva
+  cell.classList.add('seleccionado');
+
+  // (opcional) reflejar en el input fecha del formulario
+  const inputFecha = document.getElementById(`fechaIngreso-${albergue}`);
+  if (inputFecha) inputFecha.value = iso;
+}
+
+
 function getAlbergueKey(albergueNombre) {
   if (albergueNombre.includes('Maestro')) return 'maestro';
   if (albergueNombre.includes('Tinku')) return 'tinku';
@@ -251,25 +272,33 @@ function generarCalendario(albergue) {
 
   // Días del mes anterior
   const diasMesAnterior = new Date(año, mes, 0).getDate();
-  for (let i = primerDiaSemana - 1; i >= 0; i--) {
-    contenedor.appendChild(crearDiaElemento(diasMesAnterior - i, 'otro-mes'));
+  // 
+    for (let i = 1; i <= diasEnMes; i++) {
+  const fechaActual = new Date(año, mes, i);
+  const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fechaActual.toDateString());
+
+  const dia = crearDiaElemento(i, estaOcupado ? 'ocupado' : '');
+
+  // hoy
+  const hoy = new Date();
+  if (fechaActual.toDateString() === hoy.toDateString()) {
+    dia.classList.add('hoy');
   }
 
-  // Días del mes actual
-  const hoy = new Date();
-  for (let i = 1; i <= diasEnMes; i++) {
-    const fechaActual = new Date(año, mes, i);
-    const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fechaActual.toDateString());
+  // ⬇️ NUEVO: iso y selección persistente
+  const iso = isoFromYMD(año, mes, i);
+  dia.dataset.iso = iso;
+  if (estadoCalendario[albergue].selectedISO === iso) {
+    dia.classList.add('seleccionado');
+  }
 
-    const dia = crearDiaElemento(i, estaOcupado ? 'ocupado' : '');
+  if (!estaOcupado && !dia.classList.contains('otro-mes')) {
+    dia.addEventListener('click', () => {
+      setSelectedDate(albergue, iso, dia);                // ⬅️ resalta el click
+      mostrarInfoDia(albergue, año, mes, i);              // ⬅️ y luego actualiza datos
+    });
+  }
 
-    if (fechaActual.toDateString() === hoy.toDateString()) {
-      dia.classList.add('hoy');
-    }
-
-    if (!estaOcupado && !dia.classList.contains('otro-mes')) {
-      dia.addEventListener('click', () => mostrarInfoDia(albergue, año, mes, i));
-    }
 
     contenedor.appendChild(dia);
   }
@@ -316,6 +345,51 @@ function crearDiaElemento(numero, claseExtra = '') {
 
 
 // Debe ser async porque consulta al backend
+// async function mostrarInfoDia(albergue, año, mes0, dia) {
+//   const fecha = new Date(año, mes0, dia);
+//   const fechaISO = `${año}-${String(mes0 + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+//   const diaSemana = CONFIG.diasSemana[fecha.getDay()];
+//   const mesNombre = CONFIG.meses[mes0];
+
+//   console.log(`mostrarInfoDia llamado para albergue: ${albergue}, fecha: ${fechaISO}`);
+
+//   // 1) Pedir disponibilidad real al GS
+//   const disponibilidad = await obtenerDisponibilidadDia(albergue, fechaISO); // <-- esta función debe existir
+
+//   // 2) Valores por defecto si no hay registro (capacidad máxima)
+//   let ocupados = 0;
+//   let capacidad = capacidades[albergue];
+//   let disponibles = capacidad;
+
+//   if (disponibilidad) {
+//     ocupados = disponibilidad.ocupados;
+//     capacidad = disponibilidad.capacidad;
+//     disponibles = disponibilidad.disponibles;
+//     // mantener cache local si lo usás
+//     ocupacionActual[albergue] = ocupados;
+//   } else {
+//     console.error('No se obtuvo disponibilidad, usando valores por defecto');
+//   }
+
+//   // 3) Actualizar el modal con ids genéricos
+//   const spanDisp = document.getElementById(`disponibles-${albergue}`);
+//   if (spanDisp) spanDisp.textContent = disponibles;
+//   const spanCap = document.getElementById(`capacidad-${albergue}`);
+//   if (spanCap) spanCap.textContent = capacidad;
+
+//   // 4) (Opcional) Cartel informativo
+//   const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
+//   const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
+//                   `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
+//                   `Capacidad total: ${capacidad} personas\n` +
+//                   `Personas ocupadas: ${ocupados} personas\n` +
+//                   `Disponibles: ${disponibles} personas`;
+//   alert(mensaje);
+
+//   updateOcupacionUI(albergue, ocupados, capacidad);
+
+// }
+
 async function mostrarInfoDia(albergue, año, mes0, dia) {
   const fecha = new Date(año, mes0, dia);
   const fechaISO = `${año}-${String(mes0 + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
@@ -325,22 +399,16 @@ async function mostrarInfoDia(albergue, año, mes0, dia) {
   console.log(`mostrarInfoDia llamado para albergue: ${albergue}, fecha: ${fechaISO}`);
 
   // 1) Pedir disponibilidad real al GS
-  const disponibilidad = await obtenerDisponibilidadDia(albergue, fechaISO); // <-- esta función debe existir
+  const disponibilidad = await obtenerDisponibilidadDia(albergue, fechaISO);
 
-  // 2) Valores por defecto si no hay registro (capacidad máxima)
-  let ocupados = 0;
-  let capacidad = capacidades[albergue];
-  let disponibles = capacidad;
+  // 2) Tomar capacidad/disponibles y derivar ocupados = capacidad - disponibles
+  const capBase = Number(capacidades[albergue]) || 0;
+  const capacidad   = Number(disponibilidad?.capacidad ?? capBase) || 0;
+  const disponibles = Number(disponibilidad?.disponibles ?? capacidad) || 0;
+  const ocupados    = Math.max(0, Math.min(capacidad, capacidad - disponibles));
 
-  if (disponibilidad) {
-    ocupados = disponibilidad.ocupados;
-    capacidad = disponibilidad.capacidad;
-    disponibles = disponibilidad.disponibles;
-    // mantener cache local si lo usás
-    ocupacionActual[albergue] = ocupados;
-  } else {
-    console.error('No se obtuvo disponibilidad, usando valores por defecto');
-  }
+  // Mantener cache local si lo usás
+  ocupacionActual[albergue] = ocupados;
 
   // 3) Actualizar el modal con ids genéricos
   const spanDisp = document.getElementById(`disponibles-${albergue}`);
@@ -356,7 +424,11 @@ async function mostrarInfoDia(albergue, año, mes0, dia) {
                   `Personas ocupadas: ${ocupados} personas\n` +
                   `Disponibles: ${disponibles} personas`;
   alert(mensaje);
+
+  // 5) Actualizar barra y texto "X/Cap personas ocupadas"
+  updateOcupacionUI(albergue, ocupados, capacidad);
 }
+
 
 function cambiarMes(albergue, direccion) {
   estadoCalendario[albergue].mes += direccion;
@@ -369,6 +441,13 @@ function cambiarMes(albergue, direccion) {
     estadoCalendario[albergue].mes = 0;
     estadoCalendario[albergue].año++;
   }
+
+  const estadoCalendario = {
+  maestro:  { mes: new Date().getMonth(), año: new Date().getFullYear(), selectedISO: null },
+  tinku:    { mes: new Date().getMonth(), año: new Date().getFullYear(), selectedISO: null },
+  aquilina: { mes: new Date().getMonth(), año: new Date().getFullYear(), selectedISO: null }
+};
+
 
   generarCalendario(albergue);
 }
@@ -482,4 +561,15 @@ async function obtenerDisponibilidadDia(albergueKey, fechaISO) {
     disponibles: json.disponibles,
     capacidad: json.capacidad
   };
+}
+
+
+function updateOcupacionUI(albergue, ocupados, capacidad) {
+  const percent = capacidad > 0 ? Math.max(0, Math.min(100, Math.round((ocupados / capacidad) * 100))) : 0;
+
+  const fill = document.getElementById(`ocupacion-fill-${albergue}`);
+  if (fill) fill.style.width = `${percent}%`;
+
+  const info = document.getElementById(`ocupacion-info-${albergue}`);
+  if (info) info.textContent = `${ocupados}/${capacidad} personas ocupadas`;
 }
