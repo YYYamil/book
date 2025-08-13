@@ -1,7 +1,7 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbxi7wy7EzNvWg4dnJ9CvI6Xs9YF6Ltw09kSO_znu8QZj88SyvTdfySUGFz5OfogAcvg/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbz6U2YrFxatwQF4h-YKBgeL0RrXIV4Pp77Mx_X7cj7q0Id9wz3JXkew-KlLYdR1y7Ej/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -54,6 +54,23 @@ const formSubmissionState = {
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
+
+  document.querySelectorAll('.glide').forEach(el => {
+    if (!window.Glide) {
+      console.warn('Glide.js no está cargado');
+      return;
+    }
+    new Glide(el, {
+      type: 'carousel',
+      perView: 1,
+      autoplay: 4000,     // 4s
+      hoverpause: true,   // pausa al pasar el mouse (mejor UX)
+      animationDuration: 600,
+      gap: 0
+    }).mount();
+  });
+
+  
   setMinDates();
   setupDateListeners();
   setupFormListeners();
@@ -719,3 +736,5 @@ function showSnackbar(message, type = 'success', duration = 1800) {
     bar.classList.remove('show');
   }, duration);
 }
+
+

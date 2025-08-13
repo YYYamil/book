@@ -126,8 +126,8 @@
 
         .card-image {
             height: 200px;
-            background-size: cover;
-            background-position: center;
+            position: relative;
+            overflow: hidden;
         }
 
         .card-header {
@@ -854,3 +854,16 @@
 #app-snackbar.error { background: #ef4444; }
 #app-snackbar.success { background: #10b981; }
 
+/* que el carrusel ocupe toda la tarjeta */
+.card-image .glide,
+.card-image .glide__track,
+.card-image .glide__slides,
+.card-image .glide__slide { height: 100%; }
+
+/* que las imágenes se vean bien */
+.glide__slide img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
