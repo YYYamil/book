@@ -1,7 +1,7 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbyLjmLXc-9NkK6jbCxeZ3r3NSYV7x4TGatHWCncugnY4xKyVa7Epza7EH6rb7mAJEA-/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbxi7wy7EzNvWg4dnJ9CvI6Xs9YF6Ltw09kSO_znu8QZj88SyvTdfySUGFz5OfogAcvg/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -109,39 +109,6 @@ function handleFormSubmit(e) {
   });
 }
 
-// async function submitForm(albergue) {
-//   console.log(`Iniciando envío de formulario para ${albergue}`);
-//   // Obtener valores del formulario
-//   const formData = getFormData(albergue);
-
-//   // Validación básica
-//   if (!formData.institucion || !formData.responsable || !formData.contacto || !formData.cantidad || !formData.fechaIngreso || !formData.horaIngreso) {
-//     console.log(`Validación fallida para ${albergue}`);
-//     alert("Por favor complete todos los campos del formulario");
-//     return;
-//   }
-
-//   // --- Enviar a Google Sheets ---
-//   const resultado = await enviarReservaAGoogleSheets(formData);
-
-//   if (resultado.success) {
-//     console.log(`Reserva exitosa para ${albergue}, ID: ${resultado.idReserva}`);
-//     mostrarConfirmacion(albergue, formData, resultado.idReserva);
-
-//     // Actualizar cache local si pernocta es true
-//     if (formData.pernocta) {
-//       actualizarCacheLocal(albergue, formData.fechaIngreso);
-//     }
-
-//     // Limpiar formulario y cerrar modal
-//     resetForm(albergue);
-//     closeModal(albergue);
-//   } else {
-//     console.log(`Error en reserva para ${albergue}: ${resultado.message}`);
-//     alert(`Error al guardar la reserva: ${resultado.message}`);
-//   }
-// }
-
 async function submitForm(albergue) {
   console.log(`Iniciando envío de formulario para ${albergue}`);
 
@@ -159,29 +126,30 @@ async function submitForm(albergue) {
     const resultado = await enviarReservaAGoogleSheets(formData);
 
     if (resultado.success) {
-      // Actualizá lo que ya venías haciendo (cache, etc.)
       mostrarConfirmacion(albergue, formData, resultado.idReserva);
-      if (formData.pernocta) actualizarCacheLocal(albergue, formData.fechaIngreso);
-
-      // ÉXITO visual en el botón
       setBtnSuccess(btn);
+showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al 381-123456.', 'success', 5800);
 
-      // Espera breve para que el usuario vea la tilde y cerramos modal
       setTimeout(() => {
         resetForm(albergue);
         closeModal(albergue);
-        resetBtn(btn); // listo para el próximo uso
+        resetBtn(btn);
       }, 900);
     } else {
-      alert(`Error al guardar la reserva: ${resultado.message}`);
-      resetBtn(btn);
+      setBtnError(btn, 'Error');
+showSnackbar(`Error al guardar la reserva: ${resultado.message || 'Intente nuevamente'}`, 'error', 2200);
+      setTimeout(() => resetBtn(btn), 1200);
+      return;
     }
   } catch (err) {
     console.error(err);
-    alert('Ocurrió un error al enviar la reserva. Intenta nuevamente.');
-    resetBtn(btn);
+    setBtnError(btn, 'Error');
+    alert('Ocurrió un error al enviar la reserva.');
+    setTimeout(() => resetBtn(btn), 1200);
   }
 }
+
+
 
 
 // Helper functions
@@ -232,13 +200,13 @@ function resetForm(albergue) {
   console.log(`Formulario reseteado para ${albergue}, Pernocta: ${pernoctaCheckbox ? pernoctaCheckbox.checked : 'No checkbox'}`);
 }
 
-function actualizarCacheLocal(albergue, fechaIngreso) {
-  const fecha = new Date(fechaIngreso);
-  if (!fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString())) {
-    fechasOcupadas[albergue].push(new Date(fecha));
-    console.log(`Cache local actualizado para ${albergue}, fecha: ${fechaIngreso}`);
-  }
-}
+// function actualizarCacheLocal(albergue, fechaISO) {
+//   const fecha = new Date(fechaISO);
+//   if (!fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString())) {
+//     fechasOcupadas[albergue].push(new Date(fecha));
+//     console.log(`Cache local actualizado para ${albergue}, fecha: ${fechaIngreso}`);
+//   }
+// }
 
 // Funciones para fechas
 function setMinDates() {
@@ -672,19 +640,82 @@ function getSubmitButton(albergue){
 }
 function setBtnLoading(btn){
   if(!btn) return;
-  btn.classList.remove('is-success');
+  const lbl = btn.querySelector('.btn-label');
+  if (lbl) lbl.textContent = 'Confirmar Reserva';
+  // limpiar otros estados
+  btn.classList.remove('is-success','is-error');
+  // activar loading
   btn.classList.add('is-loading');
   btn.disabled = true;
 }
-function setBtnSuccess(btn){
+function setBtnSuccess(btn, text='Reservado'){
   if(!btn) return;
-  btn.classList.remove('is-loading');
+  const lbl = btn.querySelector('.btn-label');
+  if (lbl) lbl.textContent = text;
+  btn.classList.remove('is-loading','is-error'); // <- importante
   btn.classList.add('is-success');
   btn.disabled = true;
 }
-function resetBtn(btn){
+// function resetBtn(btn){
+//   if(!btn) return;
+//   btn.classList.remove('is-loading','is-success');
+//   btn.disabled = false;
+// }
+
+// function setBtnError(btn, text='Error'){
+//   if(!btn) return;
+//   const lbl = btn.querySelector('.btn-label');
+//   if (lbl) lbl.textContent = text;
+//   // Quitar otros estados visuales
+//   btn.classList.remove('is-loading','is-success');
+//   // Mostrar rojo con X
+//   btn.classList.add('is-error');
+//   // Permitimos reintentar: NO lo dejamos deshabilitado
+//   btn.disabled = false;
+// }
+
+function setBtnError(btn, text='Error'){
   if(!btn) return;
-  btn.classList.remove('is-loading','is-success');
+  const lbl = btn.querySelector('.btn-label');
+  if (lbl) lbl.textContent = text;
+  btn.classList.remove('is-loading','is-success'); // <- importante
+  btn.classList.add('is-error');
+  btn.disabled = false; // permitir reintentar
+}
+
+function resetBtn(btn, text='Confirmar Reserva'){
+  if(!btn) return;
+  const lbl = btn.querySelector('.btn-label');
+  if (lbl) lbl.textContent = text;
+  // quitar TODOS los estados
+  btn.classList.remove('is-loading','is-success','is-error'); // <- agrega is-error
   btn.disabled = false;
 }
 
+function ensureSnackbar() {
+  let bar = document.getElementById('app-snackbar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'app-snackbar';
+    document.body.appendChild(bar);
+  }
+  return bar;
+}
+
+function showSnackbar(message, type = 'success', duration = 1800) {
+  const bar = ensureSnackbar();
+  bar.classList.remove('success','error','show');
+  bar.classList.add(type === 'error' ? 'error' : 'success');
+  bar.textContent = message;
+
+  // mostrar
+  // (forzamos reflow para reiniciar la transición si ya estaba visible)
+  void bar.offsetWidth;
+  bar.classList.add('show');
+
+  // ocultar
+  clearTimeout(bar._hideTimer);
+  bar._hideTimer = setTimeout(() => {
+    bar.classList.remove('show');
+  }, duration);
+}

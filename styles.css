@@ -795,3 +795,62 @@
 @keyframes spin-center {
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
+
+/* Estado: Error (rojo + X) */
+.btn-submit.is-error{
+  background:#ef4444;                /* rojo */
+  box-shadow:0 4px 10px rgba(239,68,68,.3);
+}
+
+/* En error mostramos icono + texto, centrados como en éxito */
+.btn-submit.is-error .btn-icon{
+  position: static;                  /* no absolute, para ir junto al texto */
+  transform: none;
+  width: 18px; height: 18px;
+  display: inline-flex;
+  align-items:center; justify-content:center;
+  margin-right:.5rem;
+}
+.btn-submit.is-error .btn-icon::before{
+  content:"✕";                       /* X */
+  font-size:16px; line-height:1; color:#fff;
+}
+.btn-submit.is-error .btn-label{ opacity:1; }
+
+/* Asegurá prioridades vs. loading */
+.btn-submit.is-loading .btn-label{ opacity:0; }
+.btn-submit.is-loading .btn-icon{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  border:2px solid rgba(255,255,255,.35);
+  border-top-color:#fff; border-radius:50%;
+  animation:spin-center .8s linear infinite;
+}
+/* Snackbar global fijo */
+#app-snackbar {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(20px);
+  background: #10b981;            /* default success */
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  opacity: 0;
+  transition: opacity .18s ease, transform .18s ease;
+  z-index: 99999;                  /* por encima de overlays */
+  pointer-events: none;            /* no bloquea clics */
+  max-width: 90vw;
+  text-align: center;
+}
+
+#app-snackbar.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* variantes */
+#app-snackbar.error { background: #ef4444; }
+#app-snackbar.success { background: #10b981; }
+
