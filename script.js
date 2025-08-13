@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }).mount();
   });
 
-  
+
   setMinDates();
   setupDateListeners();
   setupFormListeners();
@@ -145,7 +145,7 @@ async function submitForm(albergue) {
     if (resultado.success) {
       mostrarConfirmacion(albergue, formData, resultado.idReserva);
       setBtnSuccess(btn);
-showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al 381-123456.', 'success', 5800);
+showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al 381-123456.', 'success', 8000);
 
       setTimeout(() => {
         resetForm(albergue);
