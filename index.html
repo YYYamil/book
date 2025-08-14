@@ -180,7 +180,7 @@
             </div>
 
             <!-- Albergue Aquilina Soldati -->
-            <div class="albergue-card alquilina">
+            <div class="albergue-card aquilina">
                 <div class="card-image">
                     <div class="glide">
                         <div class="glide__track" data-glide-el="track">
@@ -209,7 +209,7 @@
                 <div class="card-header">
                     <div class="albergue-header">
                         <h3 class="albergue-title">Albergue Aquilina <br>Soldati</h3>
-                        <div class="capacity alquilina">
+                        <div class="capacity aquilina">
                             <i class="fas fa-users"></i>
                             58 personas
                         </div>
@@ -219,31 +219,31 @@
                 <div class="card-body">
                     <div class="features">
                         <div class="feature-item">
-                            <div class="feature-icon alquilina">
+                            <div class="feature-icon aquilina">
                                 <i class="fas fa-utensils"></i>
                             </div>
                             <span>Cocina comunitaria</span>
                         </div>
                         <div class="feature-item">
-                            <div class="feature-icon alquilina">
+                            <div class="feature-icon aquilina">
                                 <i class="fas fa-door-open"></i>
                             </div>
                             <span>Dormitorios separados</span>
                         </div>
                         <div class="feature-item">
-                            <div class="feature-icon alquilina">
+                            <div class="feature-icon aquilina">
                                 <i class="fas fa-toilet"></i>
                             </div>
                             <span>Baños privados</span>
                         </div>
                         <div class="feature-item">
-                            <div class="feature-icon alquilina">
+                            <div class="feature-icon aquilina">
                                 <i class="fas fa-tree"></i>
                             </div>
                             <span>Patio exterior</span>
                         </div>
                     </div>
-                    <button class="btn-reservar alquilina" onclick="openModal('aquilina')">Reservar Ahora</button>
+                    <button class="btn-reservar aquilina" onclick="openModal('aquilina')">Reservar Ahora</button>
                     <div class="map-container">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3578.830146788623!2d-65.49806782383205!3d-26.234707965218533!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9418bd7589be37d9%3A0x56985f9492fd5f84!2sAquilina%20Soldatti%20De%20%C3%81lvarez!5e0!3m2!1sen!2sar!4v1753473913567!5m2!1sen!2sar" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
@@ -280,8 +280,6 @@
                     <!-- Dentro del modal de Maestro José Fierro -->
                         <div class="disponibilidad">
                         Camas disponibles para la fecha seleccionada: <span id="disponibles-maestro">—</span>
-                        <!-- opcional: Capacidad -->
-                        <!-- <small> / Capacidad: <span id="capacidad-maestro">—</span></small> -->
                         </div>
 
                     
@@ -319,7 +317,7 @@
                             <label for="contacto-maestro">Contacto (Número Telefónico)</label>
                             <input type="tel" id="contacto-maestro" class="form-control" required>
                         </div>
-                                              
+                        <!-- Cantidad de personas con CHECK                       -->
                         <div class="form-group">
                             <label for="cantidad-maestro">Cantidad de Personas</label>
                             <div class="input-group">
@@ -356,166 +354,186 @@
     </div>
 
     <!-- Modal para Albergue Tinku Huasi -->
-    <div id="modal-tinku" class="modal">
-        <div class="modal-content">
-            <div class="modal-header tinku">
-                <h3 class="modal-title">Reserva - Albergue Tinku Huasi</h3>
-                <button class="close-modal" onclick="closeModal('tinku')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="disponibilidad-section">
-                    <div class="disponibilidad-title">
-                        <i class="fas fa-chart-bar"></i>
-                        Disponibilidad actual
-                    </div>
-                    <div class="ocupacion-container">
-                        <div class="ocupacion-bar">
-                            <div class="ocupacion-fill" style="width: 60%;"></div>
-                        </div>
-                        <div class="ocupacion-info tinku">29/49 personas ocupadas</div>
-                    </div>
-                    
-                    <div class="calendario-container">
-                        <div class="calendario-header">
-                            <button class="nav-mes" onclick="cambiarMes('tinku', -1)"><i class="fas fa-chevron-left"></i></button>
-                            <div class="mes-title" id="mes-actual-tinku">Noviembre 2024</div>
-                            <button class="nav-mes" onclick="cambiarMes('tinku', 1)"><i class="fas fa-chevron-right"></i></button>
-                        </div>
-                        <div class="calendario-grid" id="calendario-tinku">
-                            <!-- Calendario generado dinámicamente -->
-                        </div>
-                    </div>
-                </div>
-                
-                <form id="reservaFormTinku">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="institucion-tinku">Institución/Delegación</label>
-                            <input type="text" id="institucion-tinku" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="responsable-tinku">Nombre Completo del Responsable</label>
-                            <input type="text" id="responsable-tinku" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="contacto-tinku">Contacto (Número Telefónico)</label>
-                            <input type="tel" id="contacto-tinku" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="cantidad-tinku">Cantidad de Personas</label>
-                            <input type="number" id="cantidad-tinku" class="form-control" min="1" max="49" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fechaIngreso-tinku">Fecha de Ingreso</label>
-                            <input type="date" id="fechaIngreso-tinku" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="horaIngreso-tinku">Hora de Ingreso</label>
-                            <input type="time" id="horaIngreso-tinku" class="form-control" required>
-                        </div>
-
-                        <!-- <div class="form-group">
-                            <label for="fechaSalida-tinku">Fecha de Salida</label>
-                            <input type="date" id="fechaSalida-tinku" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="horaSalida-tinku">Hora de Salida</label>
-                            <input type="time" id="horaSalida-tinku" class="form-control" required>
-                        </div> -->
-                    </div>
-
-                    <button type="submit" class="btn-submit tinku">Confirmar Reserva</button>
-                </form>
-            </div>
-        </div>
+                    <div id="modal-tinku" class="modal">
+  <div class="modal-content">
+    <div class="modal-header tinku">
+      <h3 class="modal-title">Reserva - Albergue Tinku Huasi</h3>
+      <button class="close-modal" onclick="closeModal('tinku')">&times;</button>
     </div>
+
+    <div class="modal-body">
+      <div class="disponibilidad-section">
+        <div class="disponibilidad-title">
+          <i class="fas fa-chart-bar"></i>
+          Seleccione el día para realizar la reserva:
+        </div>
+
+        <div class="ocupacion-container">
+          <div class="ocupacion-bar">
+            <div class="ocupacion-fill" id="ocupacion-fill-tinku" style="width:0%"></div>
+          </div>
+          <div class="ocupacion-info" id="ocupacion-info-tinku">—</div>
+        </div>
+
+        <div class="disponibilidad">
+          Camas disponibles para la fecha seleccionada:
+          <span id="disponibles-tinku">—</span>
+          <!-- opcional: Capacidad: <small><span id="capacidad-tinku">—</span></small> -->
+        </div>
+
+        <div class="calendario-container">
+          <div class="calendario-header">
+            <button class="nav-mes" onclick="cambiarMes('tinku', -1)"><i class="fas fa-chevron-left"></i></button>
+            <div class="mes-title" id="mes-actual-tinku">Noviembre 2024</div>
+            <button class="nav-mes" onclick="cambiarMes('tinku', 1)"><i class="fas fa-chevron-right"></i></button>
+          </div>
+
+          <div class="calendario-grid" id="calendario-tinku"></div>
+
+          <div class="cal-loader" id="cal-loader-tinku" aria-live="polite" aria-busy="false" hidden>
+            <div class="spinner" role="status" aria-label="Cargando disponibilidad"></div>
+          </div>
+        </div>
+      </div>
+
+      <form id="reservaFormTinku">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="institucion-tinku">Institución/Delegación</label>
+            <input type="text" id="institucion-tinku" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="responsable-tinku">Nombre Completo del Responsable</label>
+            <input type="text" id="responsable-tinku" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="contacto-tinku">Contacto (Número Telefónico)</label>
+            <input type="tel" id="contacto-tinku" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="cantidad-tinku">Cantidad de Personas</label>
+            <div class="input-group">
+              <input type="number" id="cantidad-tinku" class="form-control" min="1" max="92" required>
+              <label for="pernocta-tinku" style="margin-left:10px; line-height:2.5;">
+                <input type="checkbox" id="pernocta-tinku"> Reserva camas?
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="fechaIngreso-tinku">Fecha de Ingreso</label>
+            <input type="date" id="fechaIngreso-tinku" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="horaIngreso-tinku">Hora de Ingreso</label>
+            <input type="time" id="horaIngreso-tinku" class="form-control" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit tinku" id="btn-submit-tinku">
+          <span class="btn-icon" aria-hidden="true"></span>
+          <span class="btn-label">Confirmar Reserva</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+   
 
     <!-- Modal para Albergue Aquilina Soldati -->
-    <div id="modal-aquilina" class="modal">
-        <div class="modal-content">
-            <div class="modal-header alquilina">
-                <h3 class="modal-title">Reserva - Albergue Aquilina Soldati</h3>
-                <button class="close-modal" onclick="closeModal('aquilina')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="disponibilidad-section">
-                    <div class="disponibilidad-title">
-                        <i class="fas fa-chart-bar"></i>
-                        Disponibilidad actual
-                    </div>
-                    <div class="ocupacion-container">
-                        <div class="ocupacion-bar">
-                            <div class="ocupacion-fill" style="width: 45%;"></div>
-                        </div>
-                        <div class="ocupacion-info alquilina">26/58 personas ocupadas</div>
-                    </div>
-                    
-                    <div class="calendario-container">
-                        <div class="calendario-header">
-                            <button class="nav-mes" onclick="cambiarMes('aquilina', -1)"><i class="fas fa-chevron-left"></i></button>
-                            <div class="mes-title" id="mes-actual-aquilina">Noviembre 2024</div>
-                            <button class="nav-mes" onclick="cambiarMes('aquilina', 1)"><i class="fas fa-chevron-right"></i></button>
-                        </div>
-                        <div class="calendario-grid" id="calendario-aquilina">
-                            <!-- Calendario generado dinámicamente -->
-                        </div>
-                    </div>
-                </div>
-                
-                <form id="reservaFormAquilina">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="institucion-aquilina">Institución/Delegación</label>
-                            <input type="text" id="institucion-aquilina" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="responsable-aquilina">Nombre Completo del Responsable</label>
-                            <input type="text" id="responsable-aquilina" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="contacto-aquilina">Contacto (Número Telefónico)</label>
-                            <input type="tel" id="contacto-aquilina" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="cantidad-aquilina">Cantidad de Personas</label>
-                            <input type="number" id="cantidad-aquilina" class="form-control" min="1" max="58" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fechaIngreso-aquilina">Fecha de Ingreso</label>
-                            <input type="date" id="fechaIngreso-aquilina" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="horaIngreso-aquilina">Hora de Ingreso</label>
-                            <input type="time" id="horaIngreso-aquilina" class="form-control" required>
-                        </div>
-
-                        <!-- <div class="form-group">
-                            <label for="fechaSalida-aquilina">Fecha de Salida</label>
-                            <input type="date" id="fechaSalida-aquilina" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="horaSalida-aquilina">Hora de Salida</label>
-                            <input type="time" id="horaSalida-aquilina" class="form-control" required>
-                        </div> -->
-                    </div>
-
-                    <button type="submit" class="btn-submit alquilina">Confirmar Reserva</button>
-                </form>
-            </div>
-        </div>
+   <div id="modal-aquilina" class="modal">
+  <div class="modal-content">
+    <div class="modal-header aquilina">
+      <h3 class="modal-title">Reserva - Albergue Aquilina Soldati</h3>
+      <button class="close-modal" onclick="closeModal('aquilina')">&times;</button>
     </div>
+
+    <div class="modal-body">
+      <div class="disponibilidad-section">
+        <div class="disponibilidad-title">
+          <i class="fas fa-chart-bar"></i>
+          Seleccione el día para realizar la reserva:
+        </div>
+
+        <div class="ocupacion-container">
+          <div class="ocupacion-bar">
+            <div class="ocupacion-fill" id="ocupacion-fill-aquilina" style="width:0%"></div>
+          </div>
+          <div class="ocupacion-info" id="ocupacion-info-aquilina">—</div>
+        </div>
+
+        <div class="disponibilidad">
+          Camas disponibles para la fecha seleccionada:
+          <span id="disponibles-aquilina">—</span>
+          <!-- opcional: Capacidad: <small><span id="capacidad-aquilina">—</span></small> -->
+        </div>
+
+        <div class="calendario-container">
+          <div class="calendario-header">
+            <button class="nav-mes" onclick="cambiarMes('aquilina', -1)"><i class="fas fa-chevron-left"></i></button>
+            <div class="mes-title" id="mes-actual-aquilina">Noviembre 2024</div>
+            <button class="nav-mes" onclick="cambiarMes('aquilina', 1)"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <div class="calendario-grid" id="calendario-aquilina"></div>
+
+          <div class="cal-loader" id="cal-loader-aquilina" aria-live="polite" aria-busy="false" hidden>
+            <div class="spinner" role="status" aria-label="Cargando disponibilidad"></div>
+          </div>
+        </div>
+      </div>
+
+      <form id="reservaFormAquilina">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="institucion-aquilina">Institución/Delegación</label>
+            <input type="text" id="institucion-aquilina" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="responsable-aquilina">Nombre Completo del Responsable</label>
+            <input type="text" id="responsable-aquilina" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="contacto-aquilina">Contacto (Número Telefónico)</label>
+            <input type="tel" id="contacto-aquilina" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="cantidad-aquilina">Cantidad de Personas</label>
+            <div class="input-group">
+              <input type="number" id="cantidad-aquilina" class="form-control" min="1" max="92" required>
+              <label for="pernocta-aquilina" style="margin-left:10px; line-height:2.5;">
+                <input type="checkbox" id="pernocta-aquilina"> Reserva camas?
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="fechaIngreso-aquilina">Fecha de Ingreso</label>
+            <input type="date" id="fechaIngreso-aquilina" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="horaIngreso-aquilina">Hora de Ingreso</label>
+            <input type="time" id="horaIngreso-aquilina" class="form-control" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit aquilina" id="btn-submit-aquilina">
+          <span class="btn-icon" aria-hidden="true"></span>
+          <span class="btn-label">Confirmar Reserva</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
 
     <footer>
         <div class="container">

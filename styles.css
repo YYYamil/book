@@ -111,7 +111,7 @@
             border-top: 5px solid var(--azul);
         }
 
-        .albergue-card.alquilina {
+        .albergue-card.aquilina {
             border-top-color: var(--amarillo);
         }
 
@@ -168,7 +168,7 @@
             flex-shrink: 0;
         }
 
-        .capacity.alquilina {
+        .capacity.aquilina {
             background-color: var(--amarillo);
         }
 
@@ -213,7 +213,7 @@
             font-size: 12px;
         }
 
-        .feature-icon.alquilina {
+        .feature-icon.aquilina {
             background-color: var(--amarillo);
         }
 
@@ -237,7 +237,7 @@
             margin-bottom: 20px;
         }
 
-        .btn-reservar.alquilina {
+        .btn-reservar.aquilina {
             background: linear-gradient(to right, var(--amarillo), #e6b500);
             color: var(--gris-oscuro);
         }
@@ -318,7 +318,7 @@
             align-items: center;
         }
 
-        .modal-header.alquilina {
+        .modal-header.aquilina {
             background: linear-gradient(135deg, var(--amarillo) 0%, #e6b500 100%);
             color: var(--gris-oscuro);
         }
@@ -416,7 +416,7 @@
             box-shadow: 0 4px 10px rgba(0, 92, 162, 0.3);
         }
 
-        .btn-submit.alquilina {
+        .btn-submit.aquilina {
             background: linear-gradient(to right, var(--amarillo), #e6b500);
             color: var(--gris-oscuro);
             box-shadow: 0 4px 10px rgba(254, 200, 0, 0.3);
@@ -482,7 +482,7 @@
             font-size: 14px;
         }
 
-        .ocupacion-info.alquilina {
+        .ocupacion-info.aquilina {
             color: #e6b500;
         }
 

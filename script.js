@@ -483,11 +483,11 @@ function cambiarMes(albergue, direccion) {
     estadoCalendario[albergue].año++;
   }
 
-  const estadoCalendario = {
-  maestro:  { mes: new Date().getMonth(), año: new Date().getFullYear(), selectedISO: null },
-  tinku:    { mes: new Date().getMonth(), año: new Date().getFullYear(), selectedISO: null },
-  aquilina: { mes: new Date().getMonth(), año: new Date().getFullYear(), selectedISO: null }
-};
+  // const estadoCalendario = {
+  // maestro:  { mes: new Date().getMonth(), año: new Date().getFullYear(), selectedISO: null },
+  // tinku:    { mes: new Date().getMonth(), año: new Date().getFullYear(), selectedISO: null },
+  // aquilina: { mes: new Date().getMonth(), año: new Date().getFullYear(), selectedISO: null }
+//};
 
 
   generarCalendario(albergue);
