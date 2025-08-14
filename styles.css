@@ -956,3 +956,83 @@
                 font-size: 12px;
             }
         }
+
+
+        /* Estilo de campo bloqueado */
+.locked-date[readonly]{
+  background: #eef2f7;
+  cursor: not-allowed;
+}
+
+/* Oculta el ícono del picker (Chrome/Safari/Edge) */
+.locked-date::-webkit-calendar-picker-indicator{
+  display: none;
+}
+
+/* ===== Días base ===== */
+.dia {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+  position: relative;
+  font-size: 14px;
+}
+
+/* Hover solo para días activos */
+.dia:hover { background-color: var(--gris-medio); }
+
+/* ===== Días inactivos: otro mes + pasados ===== */
+.dia.otro-mes,
+.dia.inactiva {
+  color: #bbb;
+  cursor: not-allowed;
+  pointer-events: none;           /* no clic */
+  opacity: .8;
+}
+.dia.otro-mes:hover,
+.dia.inactiva:hover { background: none; } /* sin hover */
+
+/* Hoy (lo mantenemos) */
+.dia.hoy {
+  background-color: var(--celeste);
+  color: var(--azul);
+  font-weight: 700;
+}
+
+/* ===== Día seleccionado (por defecto: Maestro/azul) ===== */
+.dia.seleccionado {
+  background-color: var(--azul);
+  color: #fff;
+  border: 1px solid rgba(0,0,0,.05);
+}
+
+/* Tinku: celeste */
+#modal-tinku .calendario-grid .dia.seleccionado{
+  background: rgba(56, 189, 248, .22);
+  border-color: rgba(56, 189, 248, .60);
+  color: inherit;
+}
+
+/* Aquilina: amarillo */
+#modal-aquilina .calendario-grid .dia.seleccionado{
+  background: rgba(250, 204, 21, .28);
+  border-color: rgba(250, 204, 21, .70);
+  color: #2b2b2b;
+}
+
+/* Si un día ocupado también está seleccionado, priorizamos "seleccionado" */
+#modal-tinku .calendario-grid .dia.ocupado.seleccionado,
+#modal-aquilina .calendario-grid .dia.ocupado.seleccionado{
+  background: inherit;
+  border-color: inherit;
+  color: inherit;
+}
+#modal-tinku .calendario-grid .dia.ocupado.seleccionado::after,
+#modal-aquilina .calendario-grid .dia.ocupado.seleccionado::after{
+  opacity: 0;
+}

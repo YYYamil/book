@@ -68,6 +68,10 @@ document.addEventListener('DOMContentLoaded', function() {
       animationDuration: 600,
       gap: 0
     }).mount();
+
+    lockFechaInputs();
+      populateHourSelects();
+
   });
 
 
@@ -145,7 +149,7 @@ async function submitForm(albergue) {
     if (resultado.success) {
       mostrarConfirmacion(albergue, formData, resultado.idReserva);
       setBtnSuccess(btn);
-showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al 381-123456.', 'success', 8000);
+showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al 381-123456.', 'success', 10000);
 
       setTimeout(() => {
         resetForm(albergue);
@@ -295,6 +299,9 @@ function generarCalendario(albergue) {
     diaHeader.className = 'dia-header';
     diaHeader.textContent = dia;
     contenedor.appendChild(diaHeader);
+
+
+    
   });
 
   // Días del mes anterior
@@ -351,71 +358,9 @@ function crearDiaElemento(numero, claseExtra = '') {
   return dia;
 }
 
-// function mostrarInfoDia(albergue, año, mes, dia) {
-//   const fecha = new Date(año, mes, dia);
-//   const diaSemana = CONFIG.diasSemana[fecha.getDay()];
-//   const mesNombre = CONFIG.meses[mes];
-
-//   const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
-//   const disponibles = capacidades[albergue] - ocupacionActual[albergue];
-
-  
-
-//   const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
-//                   `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
-//                   `Capacidad total: ${capacidades[albergue]} personas\n` +
-//                   `Personas ocupadas: ${ocupacionActual[albergue]} personas\n` +
-//                   `Disponibles: ${disponibles} personas`;
-
-//   alert(mensaje);
-// }
 
 
-// Debe ser async porque consulta al backend
-// async function mostrarInfoDia(albergue, año, mes0, dia) {
-//   const fecha = new Date(año, mes0, dia);
-//   const fechaISO = `${año}-${String(mes0 + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-//   const diaSemana = CONFIG.diasSemana[fecha.getDay()];
-//   const mesNombre = CONFIG.meses[mes0];
 
-//   console.log(`mostrarInfoDia llamado para albergue: ${albergue}, fecha: ${fechaISO}`);
-
-//   // 1) Pedir disponibilidad real al GS
-//   const disponibilidad = await obtenerDisponibilidadDia(albergue, fechaISO); // <-- esta función debe existir
-
-//   // 2) Valores por defecto si no hay registro (capacidad máxima)
-//   let ocupados = 0;
-//   let capacidad = capacidades[albergue];
-//   let disponibles = capacidad;
-
-//   if (disponibilidad) {
-//     ocupados = disponibilidad.ocupados;
-//     capacidad = disponibilidad.capacidad;
-//     disponibles = disponibilidad.disponibles;
-//     // mantener cache local si lo usás
-//     ocupacionActual[albergue] = ocupados;
-//   } else {
-//     console.error('No se obtuvo disponibilidad, usando valores por defecto');
-//   }
-
-//   // 3) Actualizar el modal con ids genéricos
-//   const spanDisp = document.getElementById(`disponibles-${albergue}`);
-//   if (spanDisp) spanDisp.textContent = disponibles;
-//   const spanCap = document.getElementById(`capacidad-${albergue}`);
-//   if (spanCap) spanCap.textContent = capacidad;
-
-//   // 4) (Opcional) Cartel informativo
-//   const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString());
-//   const mensaje = `Fecha seleccionada: ${diaSemana}, ${dia} de ${mesNombre} de ${año}\n` +
-//                   `Estado: ${estaOcupado ? 'No disponible' : 'Disponible'}\n` +
-//                   `Capacidad total: ${capacidad} personas\n` +
-//                   `Personas ocupadas: ${ocupados} personas\n` +
-//                   `Disponibles: ${disponibles} personas`;
-//   alert(mensaje);
-
-//   updateOcupacionUI(albergue, ocupados, capacidad);
-
-// }
 
 async function mostrarInfoDia(albergue, año, mes0, dia) {
   const fecha = new Date(año, mes0, dia);
@@ -738,3 +683,45 @@ function showSnackbar(message, type = 'success', duration = 1800) {
 }
 
 
+// Llama a esta función una vez (p. ej. al cargar la página)
+function lockFechaInputs() {
+  const keys = ['maestro','tinku','aquilina']; // agregá más albergues si sumás
+  keys.forEach(key => {
+    const el = document.getElementById(`fechaIngreso-${key}`);
+    if (!el) return;
+
+    el.readOnly = true;                          // evita edición
+    el.classList.add('locked-date');             // para el look + ocultar icono
+    el.setAttribute('aria-readonly', 'true');
+    el.tabIndex = -1;                            // saca del tab order
+
+    // Evita abrir el picker o escribir con teclado/ratón
+    el.addEventListener('mousedown', e => e.preventDefault());
+    el.addEventListener('keydown',  e => e.preventDefault());
+    el.addEventListener('focus',    e => e.target.blur());
+  });
+}
+
+
+function populateHourSelects() {
+  // Usa tu registro de albergues si existe; si no, fallback:
+  const keys = (typeof ALBERGUES !== 'undefined' && Array.isArray(ALBERGUES))
+    ? ALBERGUES.map(a => a.key)
+    : ['maestro','tinku','aquilina'];
+
+  // genera ['08:00','09:00',...'20:00']
+  const options = [];
+  for (let h = 8; h <= 20; h++) {
+    const hh = String(h).padStart(2, '0');
+    options.push(`${hh}:00`);
+  }
+
+  keys.forEach(key => {
+    const sel = document.getElementById(`horaIngreso-${key}`);
+    if (!sel) return;
+
+    // placeholder deshabilitado
+    sel.innerHTML = '<option value="" disabled selected>Seleccione hora</option>' +
+      options.map(val => `<option value="${val}">${val}</option>`).join('');
+  });
+}
