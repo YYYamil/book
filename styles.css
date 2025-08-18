@@ -111,7 +111,7 @@
             border-top: 5px solid var(--azul);
         }
 
-        .albergue-card.alquilina {
+        .albergue-card.aquilina {
             border-top-color: var(--amarillo);
         }
 
@@ -126,8 +126,8 @@
 
         .card-image {
             height: 200px;
-            background-size: cover;
-            background-position: center;
+            position: relative;
+            overflow: hidden;
         }
 
         .card-header {
@@ -168,7 +168,7 @@
             flex-shrink: 0;
         }
 
-        .capacity.alquilina {
+        .capacity.aquilina {
             background-color: var(--amarillo);
         }
 
@@ -213,7 +213,7 @@
             font-size: 12px;
         }
 
-        .feature-icon.alquilina {
+        .feature-icon.aquilina {
             background-color: var(--amarillo);
         }
 
@@ -237,7 +237,7 @@
             margin-bottom: 20px;
         }
 
-        .btn-reservar.alquilina {
+        .btn-reservar.aquilina {
             background: linear-gradient(to right, var(--amarillo), #e6b500);
             color: var(--gris-oscuro);
         }
@@ -318,7 +318,7 @@
             align-items: center;
         }
 
-        .modal-header.alquilina {
+        .modal-header.aquilina {
             background: linear-gradient(135deg, var(--amarillo) 0%, #e6b500 100%);
             color: var(--gris-oscuro);
         }
@@ -416,7 +416,7 @@
             box-shadow: 0 4px 10px rgba(0, 92, 162, 0.3);
         }
 
-        .btn-submit.alquilina {
+        .btn-submit.aquilina {
             background: linear-gradient(to right, var(--amarillo), #e6b500);
             color: var(--gris-oscuro);
             box-shadow: 0 4px 10px rgba(254, 200, 0, 0.3);
@@ -482,7 +482,7 @@
             font-size: 14px;
         }
 
-        .ocupacion-info.alquilina {
+        .ocupacion-info.aquilina {
             color: #e6b500;
         }
 
@@ -662,3 +662,377 @@
                 max-width: 210px;
             }
         }
+
+
+        .calendario-container { position: relative; }
+
+.cal-loader[hidden] { display: none; }
+.cal-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 247, 250, 0.6); /* tenue */
+  backdrop-filter: blur(1px);
+  z-index: 2;
+}
+
+/* Spinner */
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0,0,0,0.15);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Estado bloqueado: sin clicks y con leve atenuación */
+.cal-block {
+  pointer-events: none;
+  opacity: 0.6;
+}
+/* Para boton VERDE*/
+
+/* Botón base: mantenemos tu estilo + centrado perfecto */
+.btn-submit{
+  width: 100%;
+  background: linear-gradient(to right, var(--azul), #004a8c);
+  color: var(--blanco);
+  padding: 14px 25px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: 'Roboto', sans-serif;
+  margin-top: 20px;
+  box-shadow: 0 4px 10px rgba(0, 92, 162, 0.3);
+
+  /* centrado de contenido */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;      /* para centrar el icono por absolute */
+  gap: .5rem;
+}
+
+.btn-submit:disabled{ opacity: 0.9; cursor: not-allowed; }
+
+/* Etiqueta e ícono del botón */
+.btn-submit .btn-label{ transition: opacity .15s; }
+.btn-submit .btn-icon{
+  /* centrado absoluto, no depende del ancho del texto */
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 18px; height: 18px;
+  display: none;           /* visible solo en loading/success */
+}
+
+/* Estado: Cargando (spinner centrado) */
+.btn-submit.is-loading .btn-icon{
+  display: flex;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+.btn-submit.is-loading .btn-label{ opacity: 0; }   /* ocultar sin ocupar */
+@keyframes spin{ to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* Estado: Éxito (verde + tilde centrada) */
+.btn-submit.is-success{
+  background: #10b981;     /* verde */
+  box-shadow: 0 4px 10px rgba(16,185,129,.3);
+}
+.btn-submit.is-success .btn-icon{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-submit.is-success .btn-icon::before{
+  content: "✓";
+  font-size: 16px; line-height: 1; color: #fff;
+}
+.btn-submit.is-success .btn-label{ opacity: 0; }
+
+
+/* === Calendario: spinner fijo en su lugar === */
+.cal-loader .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0,0,0,0.15);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite; /* <- usa 'spin' */
+}
+
+/* SOLO rotación (no translate) */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* === Botón: spinner centrado absoluto === */
+.btn-submit .btn-icon{
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px; height: 18px;
+  display: none;
+}
+
+/* En carga, animación con translate + rotate */
+.btn-submit.is-loading .btn-icon{
+  display: flex;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin-center .8s linear infinite; /* <- usa 'spin-center' */
+}
+
+/* Rotación con el translate incluido para el ícono absoluto del botón */
+@keyframes spin-center {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Estado: Error (rojo + X) */
+.btn-submit.is-error{
+  background:#ef4444;                /* rojo */
+  box-shadow:0 4px 10px rgba(239,68,68,.3);
+}
+
+/* En error mostramos icono + texto, centrados como en éxito */
+.btn-submit.is-error .btn-icon{
+  position: static;                  /* no absolute, para ir junto al texto */
+  transform: none;
+  width: 18px; height: 18px;
+  display: inline-flex;
+  align-items:center; justify-content:center;
+  margin-right:.5rem;
+}
+.btn-submit.is-error .btn-icon::before{
+  content:"✕";                       /* X */
+  font-size:16px; line-height:1; color:#fff;
+}
+.btn-submit.is-error .btn-label{ opacity:1; }
+
+/* Asegurá prioridades vs. loading */
+.btn-submit.is-loading .btn-label{ opacity:0; }
+.btn-submit.is-loading .btn-icon{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  border:2px solid rgba(255,255,255,.35);
+  border-top-color:#fff; border-radius:50%;
+  animation:spin-center .8s linear infinite;
+}
+/* Snackbar global fijo */
+#app-snackbar {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(20px);
+  background: #10b981;            /* default success */
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  opacity: 0;
+  transition: opacity .18s ease, transform .18s ease;
+  z-index: 99999;                  /* por encima de overlays */
+  pointer-events: none;            /* no bloquea clics */
+  max-width: 90vw;
+  text-align: center;
+}
+
+#app-snackbar.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* variantes */
+#app-snackbar.error { background: #ef4444; }
+#app-snackbar.success { background: #10b981; }
+
+/* que el carrusel ocupe toda la tarjeta */
+.card-image .glide,
+.card-image .glide__track,
+.card-image .glide__slides,
+.card-image .glide__slide { height: 100%; }
+
+/* que las imágenes se vean bien */
+.glide__slide img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+
+/* contenedor: centrado vertical y separación izquierda/derecha */
+.glide__arrows{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;          /* centra verticalmente */
+  justify-content:space-between;
+  padding:0 10px;
+  z-index:5;
+  pointer-events:none;         /* los clics solo en los botones */
+}
+
+/* botón circular: CENTRADO REAL del icono */
+.glide__arrow{
+  pointer-events:auto;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:rgba(0,92,162,.5);
+  color:#fff;
+  border:0;
+  padding:0;                   /* quita padding nativo */
+  box-sizing:border-box;
+  display:inline-flex;         /* centra con flex */
+  align-items:center;
+  justify-content:center;
+  line-height:1;               /* evita desplazamientos verticales */
+  font-size:18px;              /* tamaño del chevron si usás texto o <i> */
+  cursor:pointer;
+  transition:background .3s ease;
+  -webkit-appearance:none;     /* quita estilos nativos (Safari) */
+  appearance:none;
+}
+
+.glide__arrow:hover{ background: var(--azul); }
+
+/* si usás Font Awesome u otro ícono dentro */
+.glide__arrow i{
+  margin:0;
+  line-height:1;
+  pointer-events:none;
+  font-size:18px;
+}
+
+/* si en lugar de <i> usás el caracter "<" y ">" */
+.glide__arrow--left,
+.glide__arrow--right{
+  font-family: inherit;
+}
+
+
+/* Estilos para el footer */
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo {
+            height: 75px;
+            width: auto;
+            margin-bottom: 5px;
+        }
+
+        .footer-text {
+            text-align: center;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .footer-text p {
+            font-size: 13px; /* Tamaño un poco más grande que 8px para mejor legibilidad */
+            margin: 2px 0;
+            line-height: 1.3;
+            color: var(--blanco);
+        }
+
+            /* Versión responsiva */
+        @media (max-width: 768px) {
+            .footer-logo {
+                height: 50px;
+            }
+            
+            .footer-text p {
+                font-size: 12px;
+            }
+        }
+
+
+        /* Estilo de campo bloqueado */
+.locked-date[readonly]{
+  background: #eef2f7;
+  cursor: not-allowed;
+}
+
+/* Oculta el ícono del picker (Chrome/Safari/Edge) */
+.locked-date::-webkit-calendar-picker-indicator{
+  display: none;
+}
+
+/* ===== Días base ===== */
+.dia {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+  position: relative;
+  font-size: 14px;
+}
+
+/* Hover solo para días activos */
+.dia:hover { background-color: var(--gris-medio); }
+
+/* ===== Días inactivos: otro mes + pasados ===== */
+.dia.otro-mes,
+.dia.inactiva {
+  color: #bbb;
+  cursor: not-allowed;
+  pointer-events: none;           /* no clic */
+  opacity: .8;
+}
+.dia.otro-mes:hover,
+.dia.inactiva:hover { background: none; } /* sin hover */
+
+/* Hoy (lo mantenemos) */
+.dia.hoy {
+  background-color: var(--celeste);
+  color: var(--azul);
+  font-weight: 700;
+}
+
+/* ===== Día seleccionado (por defecto: Maestro/azul) ===== */
+.dia.seleccionado {
+  background-color: var(--azul);
+  color: #fff;
+  border: 1px solid rgba(0,0,0,.05);
+}
+
+/* Tinku: celeste */
+#modal-tinku .calendario-grid .dia.seleccionado{
+  background: rgba(56, 189, 248, .22);
+  border-color: rgba(56, 189, 248, .60);
+  color: inherit;
+}
+
+/* Aquilina: amarillo */
+#modal-aquilina .calendario-grid .dia.seleccionado{
+  background: rgba(250, 204, 21, .28);
+  border-color: rgba(250, 204, 21, .70);
+  color: #2b2b2b;
+}
+
+/* Si un día ocupado también está seleccionado, priorizamos "seleccionado" */
+#modal-tinku .calendario-grid .dia.ocupado.seleccionado,
+#modal-aquilina .calendario-grid .dia.ocupado.seleccionado{
+  background: inherit;
+  border-color: inherit;
+  color: inherit;
+}
+#modal-tinku .calendario-grid .dia.ocupado.seleccionado::after,
+#modal-aquilina .calendario-grid .dia.ocupado.seleccionado::after{
+  opacity: 0;
+}
