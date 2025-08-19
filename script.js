@@ -55,6 +55,30 @@ const formSubmissionState = {
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
 
+
+const notice = document.getElementById('site-notice');
+  if (!notice) return;
+
+  const closeBtn = notice.querySelector('.notice-close');
+  const backdrop = notice.querySelector('.notice-backdrop');
+
+  // Mostrar al iniciar
+  notice.classList.add('show');
+  document.body.style.overflow = 'hidden'; // evita scroll del fondo
+
+  function hideNotice(){
+    notice.classList.remove('show');
+    document.body.style.overflow = '';
+    // Opcional: recordá que ya se mostró (para no mostrarlo de nuevo)
+    // localStorage.setItem('siteNoticeSeen','1');
+  }
+
+  closeBtn.addEventListener('click', hideNotice);
+  backdrop.addEventListener('click', hideNotice);
+
+
+
+
   document.querySelectorAll('.glide').forEach(el => {
     if (!window.Glide) {
       console.warn('Glide.js no está cargado');
@@ -149,7 +173,7 @@ async function submitForm(albergue) {
     if (resultado.success) {
       mostrarConfirmacion(albergue, formData, resultado.idReserva);
       setBtnSuccess(btn);
-showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al 381-123456.', 'success', 10000);
+showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al (0381)452-6408.', 'success', 10000);
 
       setTimeout(() => {
         resetForm(albergue);
