@@ -1036,3 +1036,10 @@
 #modal-aquilina .calendario-grid .dia.ocupado.seleccionado::after{
   opacity: 0;
 }
+.dia.inactiva{
+  color:#bbb;
+  cursor:not-allowed;
+  pointer-events:none;
+  opacity:.8;
+}
+.dia.inactiva:hover{ background:none; }
