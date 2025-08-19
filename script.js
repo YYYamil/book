@@ -281,73 +281,218 @@ function getAlbergueKey(albergueNombre) {
 }
 
 // Funciones para el calendario
+// function generarCalendario(albergue) {
+//   const estado = estadoCalendario[albergue];
+//   const { mes, año } = estado;
+
+//   const primerDia = new Date(año, mes, 1);
+//   const ultimoDia = new Date(año, mes + 1, 0);
+//   const primerDiaSemana = primerDia.getDay();
+//   const diasEnMes = ultimoDia.getDate();
+
+//   const contenedor = document.getElementById(`calendario-${albergue}`);
+//   contenedor.innerHTML = '';
+
+//   // Encabezados de días
+//   CONFIG.diasSemanaCortos.forEach(dia => {
+//     const diaHeader = document.createElement('div');
+//     diaHeader.className = 'dia-header';
+//     diaHeader.textContent = dia;
+//     contenedor.appendChild(diaHeader);
+
+
+    
+//   });
+
+//   // Días del mes anterior
+//   const diasMesAnterior = new Date(año, mes, 0).getDate();
+//   // 
+//     for (let i = 1; i <= diasEnMes; i++) {
+//   const fechaActual = new Date(año, mes, i);
+//   const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fechaActual.toDateString());
+
+//   const dia = crearDiaElemento(i, estaOcupado ? 'ocupado' : '');
+
+//   // hoy
+//   const hoy = new Date();
+//   if (fechaActual.toDateString() === hoy.toDateString()) {
+//     dia.classList.add('hoy');
+//   }
+
+//   // ⬇️ NUEVO: iso y selección persistente
+//   const iso = isoFromYMD(año, mes, i);
+//   dia.dataset.iso = iso;
+//   if (estadoCalendario[albergue].selectedISO === iso) {
+//     dia.classList.add('seleccionado');
+//   }
+
+//   if (!estaOcupado && !dia.classList.contains('otro-mes')) {
+//     dia.addEventListener('click', () => {
+//       setSelectedDate(albergue, iso, dia);                // ⬅️ resalta el click
+//       mostrarInfoDia(albergue, año, mes, i);              // ⬅️ y luego actualiza datos
+//     });
+//   }
+
+
+//     contenedor.appendChild(dia);
+//   }
+
+//   // Días del mes siguiente
+//   const totalCeldas = 42; // 6 filas x 7 días
+//   const diasMesSiguiente = totalCeldas - (primerDiaSemana + diasEnMes);
+
+//   for (let i = 1; i <= diasMesSiguiente; i++) {
+//     contenedor.appendChild(crearDiaElemento(i, 'otro-mes'));
+//   }
+
+//   // Actualizar título del mes
+//   document.getElementById(`mes-actual-${albergue}`).textContent = 
+//     `${CONFIG.meses[mes]} ${año}`;
+//   console.log(`Calendario generado para ${albergue}, mes: ${CONFIG.meses[mes]} ${año}`);
+// }
+
+
+// function generarCalendario(albergue) {
+//   const estado = estadoCalendario[albergue];
+//   const { mes, año } = estado;
+
+//   const primerDia = new Date(año, mes, 1);
+//   const ultimoDia = new Date(año, mes + 1, 0);
+//   const primerDiaSemana = primerDia.getDay(); // 0=Dom, 1=Lun, ...
+//   const diasEnMes = ultimoDia.getDate();
+
+//   const contenedor = document.getElementById(`calendario-${albergue}`);
+//   if (!contenedor) return;
+//   contenedor.innerHTML = '';
+
+//   // Encabezados
+//   CONFIG.diasSemanaCortos.forEach(dia => {
+//     const diaHeader = document.createElement('div');
+//     diaHeader.className = 'dia-header';
+//     diaHeader.textContent = dia;
+//     contenedor.appendChild(diaHeader);
+//   });
+
+//   // ⬅️ Agregar "offset" inicial: celdas del mes anterior (vacías/grises)
+//   for (let k = 0; k < primerDiaSemana; k++) {
+//     contenedor.appendChild(crearDiaElemento('', 'otro-mes'));
+//   }
+
+//   // Días del mes actual
+//   const hoy = new Date(); hoy.setHours(0,0,0,0);
+//   for (let i = 1; i <= diasEnMes; i++) {
+//     const fechaActual = new Date(año, mes, i); fechaActual.setHours(0,0,0,0);
+//     const iso = isoFromYMD(año, mes, i);
+//     const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fechaActual.toDateString());
+
+    
+
+//     // armamos clases (podés sumar 'inactiva' si querés bloquear pasado)
+//     const clase = estaOcupado ? 'ocupado' : '';
+//     const dia = crearDiaElemento(i, clase);
+//     dia.dataset.iso = iso;
+
+//     // hoy
+//     if (fechaActual.getTime() === hoy.getTime()) {
+//       dia.classList.add('hoy');
+//     }
+//     // seleccionado persistente
+//     if (estadoCalendario[albergue].selectedISO === iso) {
+//       dia.classList.add('seleccionado');
+//     }
+
+//     // click sólo si no está ocupado
+//     if (!estaOcupado) {
+//       dia.addEventListener('click', () => {
+//         setSelectedDate(albergue, iso, dia);
+//         mostrarInfoDia(albergue, año, mes, i);
+//       });
+//     } 
+//     contenedor.appendChild(dia);
+//   }
 function generarCalendario(albergue) {
   const estado = estadoCalendario[albergue];
   const { mes, año } = estado;
 
   const primerDia = new Date(año, mes, 1);
   const ultimoDia = new Date(año, mes + 1, 0);
-  const primerDiaSemana = primerDia.getDay();
+  const primerDiaSemana = primerDia.getDay(); // 0=Dom, 1=Lun, ...
   const diasEnMes = ultimoDia.getDate();
 
   const contenedor = document.getElementById(`calendario-${albergue}`);
+  if (!contenedor) return;
   contenedor.innerHTML = '';
 
-  // Encabezados de días
+  // Encabezados
   CONFIG.diasSemanaCortos.forEach(dia => {
     const diaHeader = document.createElement('div');
     diaHeader.className = 'dia-header';
     diaHeader.textContent = dia;
     contenedor.appendChild(diaHeader);
-
-
-    
   });
 
-  // Días del mes anterior
-  const diasMesAnterior = new Date(año, mes, 0).getDate();
-  // 
-    for (let i = 1; i <= diasEnMes; i++) {
-  const fechaActual = new Date(año, mes, i);
-  const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fechaActual.toDateString());
-
-  const dia = crearDiaElemento(i, estaOcupado ? 'ocupado' : '');
-
-  // hoy
-  const hoy = new Date();
-  if (fechaActual.toDateString() === hoy.toDateString()) {
-    dia.classList.add('hoy');
+  // Offset inicial: celdas del mes anterior (vacías/grises)
+  for (let k = 0; k < primerDiaSemana; k++) {
+    contenedor.appendChild(crearDiaElemento('', 'otro-mes'));
   }
 
-  // ⬇️ NUEVO: iso y selección persistente
-  const iso = isoFromYMD(año, mes, i);
-  dia.dataset.iso = iso;
-  if (estadoCalendario[albergue].selectedISO === iso) {
-    dia.classList.add('seleccionado');
-  }
+  // Días del mes actual
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
 
-  if (!estaOcupado && !dia.classList.contains('otro-mes')) {
-    dia.addEventListener('click', () => {
-      setSelectedDate(albergue, iso, dia);                // ⬅️ resalta el click
-      mostrarInfoDia(albergue, año, mes, i);              // ⬅️ y luego actualiza datos
-    });
-  }
+  for (let i = 1; i <= diasEnMes; i++) {
+    const fechaActual = new Date(año, mes, i); 
+    fechaActual.setHours(0,0,0,0);
 
+    const iso = isoFromYMD(año, mes, i);
+
+    const estaOcupado = Array.isArray(fechasOcupadas[albergue])
+      ? fechasOcupadas[albergue].some(f => f.toDateString() === fechaActual.toDateString())
+      : false;
+
+    const esPasado = fechaActual < hoy;
+
+    // Clases
+    let clases = [];
+    if (estaOcupado) clases.push('ocupado');
+    if (esPasado)    clases.push('inactiva');
+
+    const dia = crearDiaElemento(i, clases.join(' '));
+    dia.dataset.iso = iso;
+
+    // Hoy
+    if (fechaActual.getTime() === hoy.getTime()) {
+      dia.classList.add('hoy');
+    }
+    // Seleccionado persistente
+    if (estadoCalendario[albergue].selectedISO === iso) {
+      dia.classList.add('seleccionado');
+    }
+
+    // Click SOLO si no es pasado ni ocupado
+    if (!esPasado && !estaOcupado) {
+      dia.addEventListener('click', () => {
+        setSelectedDate(albergue, iso, dia);
+        mostrarInfoDia(albergue, año, mes, i);
+      });
+    } else {
+      // Accesibilidad: sin foco ni click
+      dia.tabIndex = -1;
+      dia.setAttribute('aria-disabled', 'true');
+    }
 
     contenedor.appendChild(dia);
   }
-
-  // Días del mes siguiente
-  const totalCeldas = 42; // 6 filas x 7 días
-  const diasMesSiguiente = totalCeldas - (primerDiaSemana + diasEnMes);
-
-  for (let i = 1; i <= diasMesSiguiente; i++) {
-    contenedor.appendChild(crearDiaElemento(i, 'otro-mes'));
+  // Relleno del mes siguiente hasta completar 6 filas (42 celdas)
+  const totalCeldas = 42;
+  const usados = primerDiaSemana + diasEnMes;
+  const faltan = totalCeldas - usados;
+  for (let i = 0; i < faltan; i++) {
+    contenedor.appendChild(crearDiaElemento('', 'otro-mes'));
   }
 
-  // Actualizar título del mes
-  document.getElementById(`mes-actual-${albergue}`).textContent = 
-    `${CONFIG.meses[mes]} ${año}`;
+  // Título del mes
+  const titulo = document.getElementById(`mes-actual-${albergue}`);
+  if (titulo) titulo.textContent = `${CONFIG.meses[mes]} ${año}`;
   console.log(`Calendario generado para ${albergue}, mes: ${CONFIG.meses[mes]} ${año}`);
 }
 
