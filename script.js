@@ -551,6 +551,8 @@ async function mostrarInfoDia(albergue, año, mes0, dia) {
   const capacidad   = Number(disponibilidad?.capacidad ?? capBase) || 0;
   const disponibles = Number(disponibilidad?.disponibles ?? capacidad) || 0;
   const ocupados    = Math.max(0, Math.min(capacidad, capacidad - disponibles));
+// al final de mostrarInfoDia(...)
+setCantidadMaxFor(albergue);
 
   // Mantener cache local si lo usás
   ocupacionActual[albergue] = ocupados;
@@ -962,3 +964,102 @@ document.addEventListener('DOMContentLoaded', () => {
   // ... tus otras inicializaciones ...
   setupFieldGuards();
 });
+//Contro en los campos Cantidad de personsa-LIMITES
+// Límites por albergue
+const LIMITES_SIN_PERNOCTA = { maestro: 300, tinku: 100, aquilina: 100 };
+const LIMITES_PERNOCTA     = { maestro: 92,  tinku: 49,  aquilina: 58  };
+
+// si ya tenés un registro ALBERGUES, podés derivar de ahí; si no:
+const ALBERGUE_KEYS = ['maestro','tinku','aquilina'];
+
+function setCantidadMaxFor(albergue){
+  const input = document.getElementById(`cantidad-${albergue}`);
+  const chk   = document.getElementById(`pernocta-${albergue}`);
+  if (!input) return;
+
+  const pernocta = !!(chk && chk.checked);
+
+  // límites base
+  const maxSinPernocta = LIMITES_SIN_PERNOCTA[albergue];  // 300/100/100
+  const maxPernoctaCap = LIMITES_PERNOCTA[albergue];      // 92/49/58
+
+  let max, placeholderText;
+
+  if (pernocta) {
+    // Tomar la disponibilidad del día (si existe). Si no hay, caer a la capacidad por pernocta.
+    const disp = getDisponiblesValue(albergue); // leído del <span id="disponibles-...">
+    if (Number.isFinite(disp)) {
+      max = Math.max(0, Math.min(maxPernoctaCap, disp));
+      placeholderText = `disponibles: ${disp}`;
+    } else {
+      max = maxPernoctaCap;
+      placeholderText = `máx ${maxPernoctaCap}`;
+    }
+  } else {
+    max = maxSinPernocta;
+    placeholderText = `máx ${maxSinPernocta}`;
+  }
+
+  // atributos del input
+  input.min = '1';
+  input.max = String(max);
+  input.step = '1';
+  input.inputMode = 'numeric';
+  input.placeholder = placeholderText;
+
+  // clamp + mensaje
+  let v = parseInt(input.value, 10);
+  if (Number.isNaN(v)) {
+    input.setCustomValidity('');
+    return;
+  }
+  if (v < 1) v = 1;
+  if (v > max) {
+    v = max;
+    input.setCustomValidity(`El máximo permitido es ${max}.`);
+  } else {
+    input.setCustomValidity('');
+  }
+  input.value = String(v);
+}
+
+
+function setupCantidadLimits(){
+  ALBERGUE_KEYS.forEach(albergue => {
+    const input = document.getElementById(`cantidad-${albergue}`);
+    if (!input) return;
+
+    // inicial
+    setCantidadMaxFor(albergue);
+
+    // al escribir / salir del campo
+    input.addEventListener('input', () => setCantidadMaxFor(albergue));
+    input.addEventListener('blur',  () => setCantidadMaxFor(albergue));
+
+    // al pegar solo números
+    input.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+      const onlyDigits = text.replace(/\D/g, '');
+      const start = input.selectionStart ?? input.value.length;
+      const end   = input.selectionEnd ?? input.value.length;
+      input.value = input.value.slice(0, start) + onlyDigits + input.value.slice(end);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    // reaccionar al tildar/destildar "Reserva camas"
+    const chk = document.getElementById(`pernocta-${albergue}`);
+    if (chk) chk.addEventListener('change', () => setCantidadMaxFor(albergue));
+  });
+}
+
+// Llamalo con tus otros inits
+document.addEventListener('DOMContentLoaded', () => {
+  setupCantidadLimits();
+});
+function getDisponiblesValue(albergue){
+  const el = document.getElementById(`disponibles-${albergue}`);
+  if (!el) return NaN;
+  const n = parseInt(String(el.textContent).replace(/[^\d]/g, ''), 10);
+  return Number.isFinite(n) ? n : NaN;
+}
