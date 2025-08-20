@@ -245,13 +245,6 @@ function resetForm(albergue) {
   console.log(`Formulario reseteado para ${albergue}, Pernocta: ${pernoctaCheckbox ? pernoctaCheckbox.checked : 'No checkbox'}`);
 }
 
-// function actualizarCacheLocal(albergue, fechaISO) {
-//   const fecha = new Date(fechaISO);
-//   if (!fechasOcupadas[albergue].some(f => f.toDateString() === fecha.toDateString())) {
-//     fechasOcupadas[albergue].push(new Date(fecha));
-//     console.log(`Cache local actualizado para ${albergue}, fecha: ${fechaIngreso}`);
-//   }
-// }
 
 // Funciones para fechas
 function setMinDates() {
@@ -305,135 +298,7 @@ function getAlbergueKey(albergueNombre) {
 }
 
 // Funciones para el calendario
-// function generarCalendario(albergue) {
-//   const estado = estadoCalendario[albergue];
-//   const { mes, año } = estado;
 
-//   const primerDia = new Date(año, mes, 1);
-//   const ultimoDia = new Date(año, mes + 1, 0);
-//   const primerDiaSemana = primerDia.getDay();
-//   const diasEnMes = ultimoDia.getDate();
-
-//   const contenedor = document.getElementById(`calendario-${albergue}`);
-//   contenedor.innerHTML = '';
-
-//   // Encabezados de días
-//   CONFIG.diasSemanaCortos.forEach(dia => {
-//     const diaHeader = document.createElement('div');
-//     diaHeader.className = 'dia-header';
-//     diaHeader.textContent = dia;
-//     contenedor.appendChild(diaHeader);
-
-
-    
-//   });
-
-//   // Días del mes anterior
-//   const diasMesAnterior = new Date(año, mes, 0).getDate();
-//   // 
-//     for (let i = 1; i <= diasEnMes; i++) {
-//   const fechaActual = new Date(año, mes, i);
-//   const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fechaActual.toDateString());
-
-//   const dia = crearDiaElemento(i, estaOcupado ? 'ocupado' : '');
-
-//   // hoy
-//   const hoy = new Date();
-//   if (fechaActual.toDateString() === hoy.toDateString()) {
-//     dia.classList.add('hoy');
-//   }
-
-//   // ⬇️ NUEVO: iso y selección persistente
-//   const iso = isoFromYMD(año, mes, i);
-//   dia.dataset.iso = iso;
-//   if (estadoCalendario[albergue].selectedISO === iso) {
-//     dia.classList.add('seleccionado');
-//   }
-
-//   if (!estaOcupado && !dia.classList.contains('otro-mes')) {
-//     dia.addEventListener('click', () => {
-//       setSelectedDate(albergue, iso, dia);                // ⬅️ resalta el click
-//       mostrarInfoDia(albergue, año, mes, i);              // ⬅️ y luego actualiza datos
-//     });
-//   }
-
-
-//     contenedor.appendChild(dia);
-//   }
-
-//   // Días del mes siguiente
-//   const totalCeldas = 42; // 6 filas x 7 días
-//   const diasMesSiguiente = totalCeldas - (primerDiaSemana + diasEnMes);
-
-//   for (let i = 1; i <= diasMesSiguiente; i++) {
-//     contenedor.appendChild(crearDiaElemento(i, 'otro-mes'));
-//   }
-
-//   // Actualizar título del mes
-//   document.getElementById(`mes-actual-${albergue}`).textContent = 
-//     `${CONFIG.meses[mes]} ${año}`;
-//   console.log(`Calendario generado para ${albergue}, mes: ${CONFIG.meses[mes]} ${año}`);
-// }
-
-
-// function generarCalendario(albergue) {
-//   const estado = estadoCalendario[albergue];
-//   const { mes, año } = estado;
-
-//   const primerDia = new Date(año, mes, 1);
-//   const ultimoDia = new Date(año, mes + 1, 0);
-//   const primerDiaSemana = primerDia.getDay(); // 0=Dom, 1=Lun, ...
-//   const diasEnMes = ultimoDia.getDate();
-
-//   const contenedor = document.getElementById(`calendario-${albergue}`);
-//   if (!contenedor) return;
-//   contenedor.innerHTML = '';
-
-//   // Encabezados
-//   CONFIG.diasSemanaCortos.forEach(dia => {
-//     const diaHeader = document.createElement('div');
-//     diaHeader.className = 'dia-header';
-//     diaHeader.textContent = dia;
-//     contenedor.appendChild(diaHeader);
-//   });
-
-//   // ⬅️ Agregar "offset" inicial: celdas del mes anterior (vacías/grises)
-//   for (let k = 0; k < primerDiaSemana; k++) {
-//     contenedor.appendChild(crearDiaElemento('', 'otro-mes'));
-//   }
-
-//   // Días del mes actual
-//   const hoy = new Date(); hoy.setHours(0,0,0,0);
-//   for (let i = 1; i <= diasEnMes; i++) {
-//     const fechaActual = new Date(año, mes, i); fechaActual.setHours(0,0,0,0);
-//     const iso = isoFromYMD(año, mes, i);
-//     const estaOcupado = fechasOcupadas[albergue].some(f => f.toDateString() === fechaActual.toDateString());
-
-    
-
-//     // armamos clases (podés sumar 'inactiva' si querés bloquear pasado)
-//     const clase = estaOcupado ? 'ocupado' : '';
-//     const dia = crearDiaElemento(i, clase);
-//     dia.dataset.iso = iso;
-
-//     // hoy
-//     if (fechaActual.getTime() === hoy.getTime()) {
-//       dia.classList.add('hoy');
-//     }
-//     // seleccionado persistente
-//     if (estadoCalendario[albergue].selectedISO === iso) {
-//       dia.classList.add('seleccionado');
-//     }
-
-//     // click sólo si no está ocupado
-//     if (!estaOcupado) {
-//       dia.addEventListener('click', () => {
-//         setSelectedDate(albergue, iso, dia);
-//         mostrarInfoDia(albergue, año, mes, i);
-//       });
-//     } 
-//     contenedor.appendChild(dia);
-//   }
 function generarCalendario(albergue) {
   const estado = estadoCalendario[albergue];
   const { mes, año } = estado;
@@ -789,23 +654,6 @@ function setBtnSuccess(btn, text='Reservado'){
   btn.classList.add('is-success');
   btn.disabled = true;
 }
-// function resetBtn(btn){
-//   if(!btn) return;
-//   btn.classList.remove('is-loading','is-success');
-//   btn.disabled = false;
-// }
-
-// function setBtnError(btn, text='Error'){
-//   if(!btn) return;
-//   const lbl = btn.querySelector('.btn-label');
-//   if (lbl) lbl.textContent = text;
-//   // Quitar otros estados visuales
-//   btn.classList.remove('is-loading','is-success');
-//   // Mostrar rojo con X
-//   btn.classList.add('is-error');
-//   // Permitimos reintentar: NO lo dejamos deshabilitado
-//   btn.disabled = false;
-// }
 
 function setBtnError(btn, text='Error'){
   if(!btn) return;
@@ -824,7 +672,7 @@ function resetBtn(btn, text='Confirmar Reserva'){
   btn.classList.remove('is-loading','is-success','is-error'); // <- agrega is-error
   btn.disabled = false;
 }
-
+//Cartel verde con numero PRERESERVA
 function ensureSnackbar() {
   let bar = document.getElementById('app-snackbar');
   if (!bar) {
@@ -964,8 +812,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ... tus otras inicializaciones ...
   setupFieldGuards();
 });
-//Contro en los campos Cantidad de personsa-LIMITES
-// Límites por albergue
+
+//Contro en los campos Cantidad de personsa-LIMITES por albergue
+
 const LIMITES_SIN_PERNOCTA = { maestro: 300, tinku: 100, aquilina: 100 };
 const LIMITES_PERNOCTA     = { maestro: 92,  tinku: 49,  aquilina: 58  };
 

@@ -1131,4 +1131,25 @@
   transform: scale(1.05);
 }
 
+/* Aviso inicial: versión reducida en pantallas grandes (~80% más pequeño) */
+@media (min-width: 1024px){
+  .notice-dialog{
+    /* antes: width: clamp(320px, 80vw, 680px) */
+    width: min(35vw, 420px);   /* más angosto */
+    max-width: 420px;
+  }
+  .notice-dialog img{
+    width: 100%;
+    height: auto;
+    max-height: 80vh;          /* cap: solo 20% del alto del viewport */
+    object-fit: contain;       /* respeta proporción */
+  }
+}
+
+
+/* Verde y negrita para el número de CAMAS disponibles */
+.disponibilidad span[id^="disponibles-"]{
+  color: #16a34a;   /* verde */
+  font-weight: 700; /* negrita */
+}
 
