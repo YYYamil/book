@@ -323,7 +323,7 @@
                   </div>
 
                   <!-- Fila 2: Contacto | Cantidad + switch pernocta compactos -->
-                  <div class="form-group">
+                  <!-- <div class="form-group">
                     <label for="contacto-maestro">Contacto (Número Telefónico)</label>
                     <input type="tel" id="contacto-maestro" class="form-control" required>
                   </div>
@@ -337,7 +337,26 @@
                         <span>Reserva camas?</span>
                       </label>
                     </div>
-                  </div>
+                  </div> -->
+
+                  <div class="form-row-qty">
+              <div class="form-group">
+                <label for="contacto-tinku">Contacto (Número Telefónico)</label>
+                <input type="tel" id="contacto-maestro" class="form-control" required>
+              </div>
+
+              <div class="form-group check-cell">
+                <label for="pernocta-maestro" class="check-inline">
+                  <input type="checkbox" id="pernocta-maestro">
+                  <span>Reserva camas?</span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="cantidad-maestro">Cantidad de Personas</label>
+                <input type="number" id="cantidad-maestro" class="form-control" min="1" required>
+              </div>
+          </div>
 
                   <!-- Fila 3: 3 columnas => Fecha | Hora Ingreso | Hora Egreso -->
                   <div class="form-row-3">
@@ -426,20 +445,28 @@
           </div>
 
           <!-- Fila 2 -->
-          <div class="form-group">
-            <label for="contacto-tinku">Contacto (Número Telefónico)</label>
-            <input type="tel" id="contacto-tinku" class="form-control" required>
+          
+          <div class="form-row-qty">
+              <div class="form-group">
+                <label for="contacto-tinku">Contacto (Número Telefónico)</label>
+                <input type="tel" id="contacto-tinku" class="form-control" required>
+              </div>
+
+              <div class="form-group check-cell">
+                <label for="pernocta-tinku" class="check-inline">
+                  <input type="checkbox" id="pernocta-tinku">
+                  <span>Reserva camas?</span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="cantidad-tinku">Cantidad de Personas</label>
+                <input type="number" id="cantidad-tinku" class="form-control" min="1" required>
+              </div>
           </div>
-          <div class="form-group">
-            <label for="cantidad-tinku">Cantidad de Personas</label>
-            <div class="input-row">
-              <input type="number" id="cantidad-tinku" class="form-control" min="1" required>
-              <label for="pernocta-tinku" class="check-inline">
-                <input type="checkbox" id="pernocta-tinku">
-                <span>Reserva camas?</span>
-              </label>
-            </div>
-          </div>
+
+  
+
 
           <!-- Fila 3 -->
           <div class="form-row-3">
@@ -458,7 +485,7 @@
           </div>
         </div>
 
-        <button type="submit" class="btn-submit" id="btn-submit-tinku">
+        <button type="submit" class="btn-submit btn-reservar tinku" id="btn-submit-tinku">
           <span class="btn-icon" aria-hidden="true"></span>
           <span class="btn-label">Confirmar Reserva</span>
         </button>
@@ -526,19 +553,23 @@
           </div>
 
           <!-- Fila 2 -->
-          <div class="form-group">
-            <label for="contacto-aquilina">Contacto (Número Telefónico)</label>
-            <input type="tel" id="contacto-aquilina" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label for="cantidad-aquilina">Cantidad de Personas</label>
-            <div class="input-row">
-              <input type="number" id="cantidad-aquilina" class="form-control" min="1" required>
-              <label for="pernocta-aquilina" class="check-inline">
-                <input type="checkbox" id="pernocta-aquilina">
-                <span>Reserva camas?</span>
-              </label>
-            </div>
+          <div class="form-row-qty">
+              <div class="form-group">
+                <label for="contacto-aquilina">Contacto (Número Telefónico)</label>
+                <input type="tel" id="contacto-aquilina" class="form-control" required>
+              </div>
+
+              <div class="form-group check-cell">
+                <label for="pernocta-aquilina" class="check-inline">
+                  <input type="checkbox" id="pernocta-aquilina">
+                  <span>Reserva camas?</span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="cantidad-aquilina">Cantidad de Personas</label>
+                <input type="number" id="cantidad-aquilina" class="form-control" min="1" required>
+              </div>
           </div>
 
           <!-- Fila 3 -->
@@ -558,7 +589,7 @@
           </div>
         </div>
 
-        <button type="submit" class="btn-submit" id="btn-submit-aquilina">
+        <button type="submit" class="btn-submit btn-reservar aquilina" id="btn-submit-aquilina">
           <span class="btn-icon" aria-hidden="true"></span>
           <span class="btn-label">Confirmar Reserva</span>
         </button>

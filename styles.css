@@ -1241,3 +1241,89 @@
   transform: translateY(-1px);
 }
 
+/* Fila de 3 columnas: Contacto | Check (centro) | Cantidad */
+.form-row-qty{
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* check al centro */
+  gap: 16px;
+  align-items: end;
+}
+
+/* En mobile se apilan en orden: Contacto → Check → Cantidad */
+@media (max-width: 900px){
+  .form-row-qty{ grid-template-columns: 1fr; }
+}
+
+/* Celda del check centrada vertical y horizontalmente */
+.check-cell{
+  display: flex;
+  justify-content: center;  /* centrado horizontal */
+  align-items: center;      /* centrado vertical */
+}
+
+/* Unificamos alturas para alineación perfecta */
+:root { --control-h: 44px; }
+
+.form-row-qty .form-control{
+  height: var(--control-h);
+}
+
+/* Pill del check compacto y de altura igual al input */
+.check-inline{
+  display: flex;
+  align-items: center;
+  height: var(--control-h);
+  padding: 0 12px;
+  border: 1px solid var(--gris-claro, #e5e7eb);
+  border-radius: 6px;
+  background: #fafafa;
+  gap: 8px;
+}
+
+.check-inline input[type="checkbox"]{
+  margin: 0;
+  transform: translateY(-1px);
+}
+/* Fila 2: Contacto | Check | Cantidad  ==> mismas anchuras que la fila 3 */
+.form-row-qty{
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* = 1fr 1fr 1fr */
+  gap: 16px;
+  align-items: end;
+}
+
+/* Centrar el check en su columna */
+.form-row-qty .check-cell{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Asegurar que los inputs llenen su celda y queden alineados */
+.form-row-qty .form-control{
+  width: 100%;
+  height: var(--control-h, 44px);
+}
+
+/* “Píldora” del check con misma altura que los inputs */
+.check-inline{
+  display: flex;
+  align-items: center;
+  height: var(--control-h, 44px);
+  padding: 0 12px;
+  border: 1px solid var(--gris-claro, #e5e7eb);
+  border-radius: 6px;
+  background: #fafafa;
+  gap: 8px;
+}
+.check-inline input[type="checkbox"]{
+  margin: 0;
+  transform: translateY(-1px);
+}
+
+/* Responsive: se apilan en móviles */
+@media (max-width: 900px){
+  .form-row-qty{ grid-template-columns: 1fr; }
+}
