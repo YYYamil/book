@@ -1,7 +1,7 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbz6U2YrFxatwQF4h-YKBgeL0RrXIV4Pp77Mx_X7cj7q0Id9wz3JXkew-KlLYdR1y7Ej/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbzNVibaekiuq_B_TF0Ns3tyWzDvPSfstmOhMW78MGgsEpGLlhb21LSQlxFg7CYMyOeQ/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -93,19 +93,23 @@ const notice = document.getElementById('site-notice');
       gap: 0
     }).mount();
 
-    lockFechaInputs();
-      populateHourSelects();
-
+    
   });
 
+  lockFechaInputs();
+  populateHourSelects();
 
   setMinDates();
   setupDateListeners();
   setupFormListeners();
+  setupHospedajeBinding();
+
 });
 
 // Funciones para manejar modales
 function openModal(albergue) {
+    resetOcupacionUI(albergue);
+
   console.log(`Abriendo modal para ${albergue}`);
   document.getElementById(`modal-${albergue}`).classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -159,7 +163,7 @@ async function submitForm(albergue) {
 
   const formData = getFormData(albergue);
   if (!formData.institucion || !formData.responsable || !formData.contacto ||
-      !formData.cantidad || !formData.fechaIngreso || !formData.horaIngreso) {
+      !formData.cantidad || !formData.fechaIngreso || !formData.horaIngreso|| !formData.horaEgreso) {
     alert("Por favor complete todos los campos del formulario");
     return;
   }
@@ -210,6 +214,7 @@ function getFormData(albergue) {
     cantidad: document.getElementById(`cantidad-${albergue}`).value,
     fechaIngreso: document.getElementById(`fechaIngreso-${albergue}`).value,
     horaIngreso: document.getElementById(`horaIngreso-${albergue}`).value,
+    horaEgreso: document.getElementById(`horaEgreso-${albergue}`).value,
     //pernocta: document.getElementById('pernocta-maestro').checked // <-- BOOLEANO nativo
     pernocta: pernoctaValue
 
@@ -488,6 +493,7 @@ async function enviarReservaAGoogleSheets(data) {
       cantidad: parseInt(data.cantidad),
       fechaIngreso: data.fechaIngreso,
       horaIngreso: data.horaIngreso,
+      horaEgreso: data.horaEgreso,
       pernocta: data.pernocta // Send boolean value
     };
 
@@ -721,29 +727,35 @@ function lockFechaInputs() {
   });
 }
 
-
 function populateHourSelects() {
-  // Usa tu registro de albergues si existe; si no, fallback:
   const keys = (typeof ALBERGUES !== 'undefined' && Array.isArray(ALBERGUES))
     ? ALBERGUES.map(a => a.key)
     : ['maestro','tinku','aquilina'];
 
-  // genera ['08:00','09:00',...'20:00']
+  // 08:00 … 20:00
   const options = [];
   for (let h = 8; h <= 20; h++) {
     const hh = String(h).padStart(2, '0');
     options.push(`${hh}:00`);
   }
 
-  keys.forEach(key => {
-    const sel = document.getElementById(`horaIngreso-${key}`);
-    if (!sel) return;
+  const htmlIngreso =
+    '<option value="" disabled selected>Seleccione hora</option>' +
+    options.map(val => `<option value="${val}">${val}</option>`).join('');
 
-    // placeholder deshabilitado
-    sel.innerHTML = '<option value="" disabled selected>Seleccione hora</option>' +
-      options.map(val => `<option value="${val}">${val}</option>`).join('');
+  // Egreso: mismas horas + “Hospedarse” al final
+  const htmlEgreso =
+    htmlIngreso +
+    '<option value="Hospedarse">Pasar la noche</option>';
+
+  keys.forEach(key => {
+    const selIng = document.getElementById(`horaIngreso-${key}`);
+    const selEgr = document.getElementById(`horaEgreso-${key}`);
+    if (selIng) selIng.innerHTML = htmlIngreso;
+    if (selEgr) selEgr.innerHTML = htmlEgreso;
   });
 }
+
 
 //Control en formularios
 
@@ -911,4 +923,76 @@ function getDisponiblesValue(albergue){
   if (!el) return NaN;
   const n = parseInt(String(el.textContent).replace(/[^\d]/g, ''), 10);
   return Number.isFinite(n) ? n : NaN;
+}
+
+
+function applyHospedajeState(albergue){
+  const chk   = document.getElementById(`pernocta-${albergue}`);
+  const selEg = document.getElementById(`horaEgreso-${albergue}`);
+  if (!selEg) return;
+
+  // Asegura que exista la opción "Hospedarse"
+  if (!selEg.querySelector('option[value="Hospedarse"]')) {
+    selEg.insertAdjacentHTML('beforeend','<option value="Hospedarse">Hospedarse</option>');
+  }
+
+  const isHospedaje = !!(chk && chk.checked);
+
+  if (isHospedaje) {
+    // guardo la última hora elegida (si no era "Hospedarse")
+    if (selEg.value && selEg.value !== 'Hospedarse') {
+      selEg.dataset.prevValue = selEg.value;
+    }
+    selEg.value = 'Hospedarse';
+    selEg.disabled = true;              // bloquea interacción
+    selEg.classList.add('locked-select');
+  } else {
+    selEg.disabled = false;
+    selEg.classList.remove('locked-select');
+    // restauro la anterior o vuelvo al placeholder
+    const prev = selEg.dataset.prevValue;
+    if (prev && prev !== 'Hospedarse') {
+      selEg.value = prev;
+    } else {
+      selEg.selectedIndex = 0;          // "Seleccione hora"
+    }
+  }
+}
+
+function setupHospedajeBinding(){
+  const keys = ['maestro','tinku','aquilina'];
+  keys.forEach(key => {
+    const chk = document.getElementById(`pernocta-${key}`);
+    if (!chk) return;
+    // estado inicial
+    applyHospedajeState(key);
+    // reaccionar al cambio
+    chk.addEventListener('change', () => {
+      applyHospedajeState(key);
+      // si ya actualizás topes con pernocta, mantenelo:
+      if (typeof setCantidadMaxFor === 'function') setCantidadMaxFor(key);
+    });
+  });
+}
+
+function resetOcupacionUI(albergue){
+  const fill = document.getElementById(`ocupacion-fill-${albergue}`);
+  const info = document.getElementById(`ocupacion-info-${albergue}`);
+
+  // reset sin animación “hacia atrás”
+  if (fill){
+    const prevTransition = fill.style.transition;
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+    // forzar reflow y restaurar transición
+    requestAnimationFrame(() => {
+      // opcional: ajusta a tu transición original si la tenías distinta
+      fill.style.transition = prevTransition || 'width .6s ease';
+    });
+  }
+  if (info) info.textContent = '—';
+
+  // (opcional) también limpio el número de disponibles mostrado
+  const disp = document.getElementById(`disponibles-${albergue}`);
+  if (disp) disp.textContent = '—';
 }

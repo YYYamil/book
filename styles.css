@@ -1153,3 +1153,91 @@
   font-weight: 700; /* negrita */
 }
 
+/* Grid base de 2 columnas en escritorio, 1 en mobile */
+.form-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 768px){
+  .form-grid{ grid-template-columns: 1fr; }
+}
+
+/* Fila de 3 columnas para fecha/ingreso/egreso */
+.form-row-3{
+  grid-column: 1 / -1;                 /* ocupar ancho completo del grid padre */
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px){
+  .form-row-3{ grid-template-columns: 1fr; }
+}
+
+/* Cantidad + check compacto en línea */
+.input-row{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.input-row .form-control{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Check en línea, compacto */
+.check-inline{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+  font-size: 14px;
+  color: var(--gris-oscuro);
+  padding: 6px 10px;
+  border: 1px solid var(--gris-claro, #e5e7eb);
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+}
+.check-inline input[type="checkbox"]{
+  accent-color: var(--azul);   /* usa tu color primario */
+  transform: scale(1.05);
+}
+
+/* Ajustes visuales */
+.form-group label{ display:block; font-weight:600; margin-bottom:6px; }
+.form-group .form-control{ width:100%; }
+
+/* Alto de controles para alinear */
+:root { --control-h: 44px; }
+
+/* Fila de "Cantidad + check" */
+.input-row{
+  display: flex;
+  align-items: flex-start;  /* ⬅️ alinear por arriba */
+  gap: 12px;
+}
+
+/* Misma altura para el input numérico en esa fila */
+.input-row .form-control{
+  height: var(--control-h);
+}
+
+/* Pill del check con la misma altura y centrado interno */
+.check-inline{
+  display: flex;
+  align-items: center;
+  height: var(--control-h);
+  padding: 0 12px;
+  border: 1px solid var(--gris-claro, #e5e7eb);
+  border-radius: 6px;
+  background: #fafafa;
+  gap: 8px;
+}
+
+/* Ajuste fino del checkbox para que no “salte” 1px arriba/abajo */
+.check-inline input[type="checkbox"]{
+  margin: 0;
+  transform: translateY(-1px);
+}
+
