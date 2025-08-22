@@ -1,14 +1,14 @@
 function doPost(e) {
   try {
-    Logger.log("Datos recibidos: " + JSON.stringify(e && e.parameter));
+    //Logger.log("Datos recibidos: " + JSON.stringify(e && e.parameter));
     const data = (e && e.parameter) ? e.parameter : {};
 
     // Validar clave secreta
     if ((data.secret || "") !== "cristiano1988") {
-      Logger.log("Error: Clave secreta inválida");
+      //Logger.log("Error: Clave secreta inválida");
       return ContentService.createTextOutput(JSON.stringify({
         success: false,
-        message: "No autorizado"
+        //message: "No autorizado"
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -36,22 +36,28 @@ function doPost(e) {
       const hojaDisponibilidad = ss.getSheetByName("Disponibilidad");
       const hojaConfig         = ss.getSheetByName("Configuraciones");
 
+      const horaEgreso = (data.horaEgreso || "").toString().trim();
+      const hospeda    = (horaEgreso === "Pasar la noche");
+
       if (!hojaReservas || !hojaDisponibilidad || !hojaConfig) {
         return ContentService.createTextOutput(JSON.stringify({
           success: false,
-          message: "Faltan hojas necesarias"
+          //message: "Faltan hojas necesarias"
         })).setMimeType(ContentService.MimeType.JSON);
       }
 
       // Pernocta ("true"/"false" como string)
       const pernoctaRaw   = (data.pernocta ?? "false").toString().trim().toLowerCase();
-      const esPernocta    = (pernoctaRaw === "true" || pernoctaRaw === "1" || pernoctaRaw === "sí" || pernoctaRaw === "si");
+      const esPernocta    = hospeda || (pernoctaRaw === "true" || pernoctaRaw === "1" || pernoctaRaw === "sí" || pernoctaRaw === "si");
       const pernoctaValue = esPernocta ? "Sí" : "No";
-      Logger.log(`Procesando reserva, pernocta: ${pernoctaValue}, raw: ${data.pernocta}, tipo: ${typeof data.pernocta}`);
+      //Logger.log(`Procesando reserva, pernocta: ${pernoctaValue}, raw: ${data.pernocta}, tipo: ${typeof data.pernocta}`);
 
       const fecha    = (data.fechaIngreso || "").toString().trim();   // "yyyy-MM-dd"
       const albergue = (data.albergue || "").toString().trim();
       const cantidad = Math.max(0, parseInt(data.cantidad, 10) || 0);
+
+      const nuevoId = new Date().getTime();
+
 
       // Capacidad máxima desde Configuraciones
       const cfg = hojaConfig.getDataRange().getValues();
@@ -61,51 +67,58 @@ function doPost(e) {
       if (capacidadMaxima <= 0) {
         return ContentService.createTextOutput(JSON.stringify({
           success: false,
-          message: `Albergue "${albergue}" no configurado`
+          //message: `Albergue "${albergue}" no configurado`
         })).setMimeType(ContentService.MimeType.JSON);
       }
 
       // Si es pernocta, validar y actualizar "Disponibilidad"
-      if (esPernocta) {
-        const datosDisp = hojaDisponibilidad.getDataRange().getValues();
-        let filaEncontrada = null;
+      // Si es pernocta, validar y actualizar "Disponibilidad"
+if (esPernocta) {
+  const datosDisp = hojaDisponibilidad.getDataRange().getValues();
 
-        // Buscar la última fila para ese día/albergue (desde el final)
-        for (let i = datosDisp.length - 1; i >= 1; i--) {
-          const rowFecha = (datosDisp[i][0] instanceof Date)
-            ? Utilities.formatDate(datosDisp[i][0], Session.getScriptTimeZone(), "yyyy-MM-dd")
-            : (datosDisp[i][0] || "").toString().trim();
-          const rowAlbergue = (datosDisp[i][1] || "").toString().trim();
-          if (rowFecha === fecha && rowAlbergue === albergue) {
-            filaEncontrada = datosDisp[i];
-            break;
-          }
-        }
+  // 1) Sumar TODAS las "Cantidad reservada" (col 4) para esa fecha+albergue
+  let totalReservadoPrevio = 0;
+  for (let i = datosDisp.length - 1; i >= 1; i--) {  // salteo encabezado
+    const rowFecha = (datosDisp[i][0] instanceof Date)
+      ? Utilities.formatDate(datosDisp[i][0], Session.getScriptTimeZone(), "yyyy-MM-dd")
+      : (datosDisp[i][0] || "").toString().trim();
+    const rowAlbergue = (datosDisp[i][1] || "").toString().trim();
 
-        const ocupadosPrevios    = filaEncontrada ? (parseInt(filaEncontrada[2], 10) || 0) : 0;
-        const nuevosOcupados     = ocupadosPrevios + cantidad;
-        const nuevosDisponibles  = capacidadMaxima - nuevosOcupados;
+    if (rowFecha === fecha && rowAlbergue === albergue) {
+      const cantReserva = parseInt(datosDisp[i][3], 10); // ← col 4 = Cantidad reservada
+      if (!isNaN(cantReserva)) totalReservadoPrevio += cantReserva;
+    }
+  }
 
-        // Permitir 0, rechazar sólo si quedaría negativo
-        if (nuevosDisponibles < 0) {
-          Logger.log(`Error: No hay lugares disponibles para ${albergue} el ${fecha}. Sobra: ${-nuevosDisponibles}`);
-          return ContentService.createTextOutput(JSON.stringify({
-            success: false,
-            message: `No hay lugares disponibles para ${albergue} el ${fecha}`
-          })).setMimeType(ContentService.MimeType.JSON);
-        }
+  // 2) Nuevo total reservado = previo + la cantidad actual que se está reservando
+  const nuevoTotalReservado = totalReservadoPrevio + cantidad;
 
-        hojaDisponibilidad.appendRow([
-          fecha,
-          albergue,
-          nuevosOcupados,      // acumulado
-          capacidadMaxima,
-          nuevosDisponibles
-        ]);
-      }
+  // 3) Disponibles = capacidad máxima - total reservado
+  const nuevosDisponibles = capacidadMaxima - nuevoTotalReservado;
+
+  // Permitir 0, rechazar solo si quedaría negativo
+  if (nuevosDisponibles < 0) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 4) Guardar fila:
+  //    col 3 = ocupados acumulados (total reservado),
+  //    col 4 = cantidad de ESTA reserva,
+  //    col 5 = disponibles calculados
+  hojaDisponibilidad.appendRow([
+    fecha,
+    albergue,
+    nuevoTotalReservado,   // col 3: ocupados/acumulado
+    cantidad,              // col 4: Cantidad reservada de ESTA reserva
+    nuevosDisponibles,      // col 5: Disponibles calculados
+    nuevoId                
+  ]);
+}
+
 
       // Guardar la reserva (incluyendo "Sí"/"No" por pernocta)
-      const nuevoId = new Date().getTime();
       hojaReservas.appendRow([
         nuevoId,
         new Date(),
@@ -116,13 +129,14 @@ function doPost(e) {
         parseInt(data.cantidad, 10) || 0,
         fecha,
         data.horaIngreso,
-        pernoctaValue,         // si tu hoja no tiene esta columna, podés quitarla
-        "Confirmada"
+        horaEgreso,
+        pernoctaValue,
+        "Pre-Reserva"
       ]);
 
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
-        message: "Reserva creada exitosamente",
+        //message: "Reserva creada exitosamente",
         idReserva: nuevoId
       })).setMimeType(ContentService.MimeType.JSON);
     }
@@ -130,14 +144,14 @@ function doPost(e) {
     // Acción inválida
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
-      message: "Acción no válida"
+      //message: "Acción no válida"
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
     Logger.log("Error en el servidor: " + (error && error.stack ? error.stack : error));
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
-      message: "Error en el servidor: " + (error && error.message ? error.message : error)
+      //message: "Error en el servidor: " + (error && error.message ? error.message : error)
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -161,7 +175,7 @@ function obtenerDisponibilidadDia_(fechaISO, albergueFullName) {
     throw new Error("Faltan hojas necesarias (Disponibilidad/Configuraciones).");
   }
 
-  // Capacidad Máxima desde Configuraciones (col 2 = capacidad, col 3 = nombre)
+  // 1) Capacidad desde Configuraciones (col 2 = capacidad, col 3 = nombre)
   const cfg = hojaConfig.getDataRange().getValues();
   let capacidadMax = 0;
   for (let i = 1; i < cfg.length; i++) {
@@ -172,25 +186,25 @@ function obtenerDisponibilidadDia_(fechaISO, albergueFullName) {
     }
   }
 
-  // Buscar última fila para esa fecha y albergue en "Disponibilidad"
+  // 2) Sumar TODAS las reservas (col 4) para esa fecha + albergue
   const datos = hojaDisp.getDataRange().getValues();
-  let fila = null;
-  for (let i = datos.length - 1; i >= 1; i--) {
+  let totalReservado = 0;
+
+  for (let i = 1; i < datos.length; i++) { // salteo encabezado
     const rowFecha = (datos[i][0] instanceof Date)
       ? Utilities.formatDate(datos[i][0], Session.getScriptTimeZone(), "yyyy-MM-dd")
       : (datos[i][0] || "").toString().trim();
     const rowAlbergue = (datos[i][1] || "").toString().trim();
+
     if (rowFecha === fechaISO && rowAlbergue === albergueFullName) {
-      fila = datos[i];
-      break;
+      const cant = parseInt(datos[i][3], 10); // col 4 = "Cantidad reservada"
+      if (!isNaN(cant)) totalReservado += cant;
     }
   }
 
-  if (fila) {
-    const ocupados     = parseInt(fila[2], 10) || 0; // col 3
-    const disponibles  = parseInt(fila[4], 10) || 0; // col 5
-    return { capacidad: capacidadMax, ocupados, disponibles };
-  }
-  // Sin registro: por consigna, mostrar "Capacidad Máxima"
-  return { capacidad: capacidadMax, ocupados: 0, disponibles: capacidadMax };
+  // 3) Ocupados/Disponibles derivados
+  const ocupados    = totalReservado;
+  const disponibles = Math.max(0, capacidadMax - totalReservado);
+
+  return { capacidad: capacidadMax, ocupados, disponibles };
 }
