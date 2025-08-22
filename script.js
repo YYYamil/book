@@ -89,7 +89,7 @@ const notice = document.getElementById('site-notice');
       perView: 1,
       autoplay: 4000,     // 4s
       hoverpause: true,   // pausa al pasar el mouse (mejor UX)
-      animationDuration: 600,
+      animationDuration: 6600,
       gap: 0
     }).mount();
 
@@ -114,6 +114,8 @@ function openModal(albergue) {
   document.getElementById(`modal-${albergue}`).classList.add('active');
   document.body.style.overflow = 'hidden';
   resetForm(albergue); // Reset form when opening modal
+    resetCalendarToToday(albergue);                      // ⬅️ NUEVO
+
   generarCalendario(albergue);
 }
 
@@ -995,4 +997,22 @@ function resetOcupacionUI(albergue){
   // (opcional) también limpio el número de disponibles mostrado
   const disp = document.getElementById(`disponibles-${albergue}`);
   if (disp) disp.textContent = '—';
+}
+
+
+function resetCalendarToToday(albergue) {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+
+  const iso = isoFromYMD(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // forzamos mes/año y día seleccionado = HOY
+  const est = estadoCalendario[albergue];
+  est.mes = now.getMonth();
+  est.año = now.getFullYear();
+  est.selectedISO = iso;
+
+  // reflejar en el input deshabilitado
+  const inputFecha = document.getElementById(`fechaIngreso-${albergue}`);
+  if (inputFecha) inputFecha.value = iso;
 }
