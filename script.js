@@ -1,7 +1,7 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbxYjOdECWT14ZKK0XHVvOPUJXOB4i0CMIwMIFCWQ4LgNROXAnepDCl22PkwU_0lisgD/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbw--m88uimsHEVDc-hLw0CirDo8WC-bI-2Jqh8SrkdPqMdNG3C_KHH2pgeVau9Zs93d/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -179,7 +179,13 @@ async function submitForm(albergue) {
     if (resultado.success) {
       mostrarConfirmacion(albergue, formData, resultado.idReserva);
       setBtnSuccess(btn);
-showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al (0381)452-6408.', 'success', 10000);
+// showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al (0381)452-6408.', 'success', 10000);
+showSnackbar(
+  `PRE-Reserva Realizada (ID: ${resultado.idReserva}). Para su confirmación, llamar al (0381)452-6408.`,
+  'success',
+  10000
+);
+
 
       setTimeout(() => {
         resetForm(albergue);
