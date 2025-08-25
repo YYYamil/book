@@ -56,7 +56,9 @@ function doPost(e) {
       const albergue = (data.albergue || "").toString().trim();
       const cantidad = Math.max(0, parseInt(data.cantidad, 10) || 0);
 
-      const nuevoId = new Date().getTime();
+      const nuevoId = (new Date().getTime() % 10000); // 0000–9999
+
+
 
 
       // Capacidad máxima desde Configuraciones
@@ -140,6 +142,70 @@ if (esPernocta) {
         idReserva: nuevoId
       })).setMimeType(ContentService.MimeType.JSON);
     }
+
+    // === Cancelar reserva por ID ===
+if (data.action === "cancelarReserva") {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaReservas       = ss.getSheetByName("Reservas");
+  const hojaDisponibilidad = ss.getSheetByName("Disponibilidad");
+
+  if (!hojaReservas || !hojaDisponibilidad){
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: "Faltan hojas necesarias"
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const idRaw = (data.idReserva || "").toString().trim();
+  if (!idRaw){
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: "ID vacío"
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // En tus últimas versiones el ID lo generás como 3 cifras: (new Date().getTime() % 1000)
+  // tratamos como string para comparar tal cual el valor guardado
+  let borradasReservas = 0;
+  let borradasDisp = 0;
+
+  // --- Borrar en "Reservas" (col 1) ---
+  const valsR = hojaReservas.getDataRange().getValues(); // incluye encabezado
+  for (let r = valsR.length - 1; r >= 1; r--) { // de abajo hacia arriba
+    const idCell = (valsR[r][0] != null) ? String(valsR[r][0]).trim() : "";
+    if (idCell === idRaw) {
+      hojaReservas.deleteRow(r + 1);
+      borradasReservas++;
+    }
+  }
+
+  // --- Borrar en "Disponibilidad" (col 6 = ID_Reserva) ---
+  const valsD = hojaDisponibilidad.getDataRange().getValues();
+  for (let r = valsD.length - 1; r >= 1; r--) {
+    const idCell = (valsD[r][5] != null) ? String(valsD[r][5]).trim() : "";
+    if (idCell === idRaw) {
+      hojaDisponibilidad.deleteRow(r + 1);
+      borradasDisp++;
+    }
+  }
+
+  const ok = (borradasReservas > 0 || borradasDisp > 0);
+  return ContentService.createTextOutput(JSON.stringify({
+    success: ok,
+    message: ok
+      ? `Eliminadas ${borradasReservas} en Reservas y ${borradasDisp} en Disponibilidad`
+      : 'No se encontró ese ID'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+
+
+
+
+
+
+
+
 
     // Acción inválida
     return ContentService.createTextOutput(JSON.stringify({

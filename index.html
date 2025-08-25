@@ -603,6 +603,37 @@
  </div>
 
 
+<!-- Botón cancelar (ancho tarjeta) -->
+<div class="container">
+  <button class="btn-cancelar" id="open-cancel-modal">
+    Cancelar reserva
+  </button>
+</div>
+
+<!-- Modal cancelar reserva -->
+<div id="modal-cancelar" class="modal">
+  <div class="modal-content">
+    <div class="modal-header" style="background:#d9534f; color:#fff;">
+      <h3 class="modal-title">Cancelar reserva</h3>
+      <button class="close-modal" id="close-cancel-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="cancelForm">
+        <div class="form-grid">
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="cancel-id">Ingrese ID de reserva</label>
+            <input type="number" id="cancel-id" class="form-control" placeholder="Ej: 123" min="0" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit btn-cancelar-roja" id="btn-cancelar-enviar">
+          <span class="btn-icon" aria-hidden="true"></span>
+          <span class="btn-label">Confirmar cancelación</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
 
 
     <footer>

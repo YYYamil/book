@@ -1,7 +1,7 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbw--m88uimsHEVDc-hLw0CirDo8WC-bI-2Jqh8SrkdPqMdNG3C_KHH2pgeVau9Zs93d/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbwUo0ouoBIxBhYl89tEy1NartJHSg-HIknuwN4Vc0YRnb601c5BDrq9-CHLNIEG1Y_L/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -697,23 +697,59 @@ function ensureSnackbar() {
   return bar;
 }
 
+// function showSnackbar(message, type = 'success', duration = 1800) {
+//   const bar = ensureSnackbar();
+//   bar.classList.remove('success','error','show');
+//   bar.classList.add(type === 'error' ? 'error' : 'success');
+//   bar.textContent = message;
+
+//   // mostrar
+//   // (forzamos reflow para reiniciar la transición si ya estaba visible)
+//   void bar.offsetWidth;
+//   bar.classList.add('show');
+
+//   // ocultar
+//   clearTimeout(bar._hideTimer);
+//   bar._hideTimer = setTimeout(() => {
+//     bar.classList.remove('show');
+//   }, duration);
+// }
+
 function showSnackbar(message, type = 'success', duration = 1800) {
   const bar = ensureSnackbar();
   bar.classList.remove('success','error','show');
   bar.classList.add(type === 'error' ? 'error' : 'success');
-  bar.textContent = message;
 
-  // mostrar
-  // (forzamos reflow para reiniciar la transición si ya estaba visible)
+  // Contenido: texto + botón X
+  bar.innerHTML = '';
+  const msg = document.createElement('span');
+  msg.className = 'snackbar-message';
+  msg.textContent = message;
+  bar.appendChild(msg);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'snackbar-close';
+  closeBtn.type = 'button';
+  closeBtn.setAttribute('aria-label', 'Cerrar');
+  closeBtn.innerHTML = '&times;';
+  closeBtn.addEventListener('click', () => {
+    clearTimeout(bar._hideTimer);
+    bar.classList.remove('show');
+  });
+  bar.appendChild(closeBtn);
+
+  // mostrar (forzamos reflow para reiniciar la transición si ya estaba visible)
   void bar.offsetWidth;
   bar.classList.add('show');
 
-  // ocultar
+  // ocultar automático
   clearTimeout(bar._hideTimer);
   bar._hideTimer = setTimeout(() => {
     bar.classList.remove('show');
   }, duration);
 }
+
+
 
 
 // Llama a esta función una vez (p. ej. al cargar la página)
@@ -1022,3 +1058,99 @@ function resetCalendarToToday(albergue) {
   const inputFecha = document.getElementById(`fechaIngreso-${albergue}`);
   if (inputFecha) inputFecha.value = iso;
 }
+
+
+// =================== Cancelación de reservas (FRONT) ===================
+function openCancelModal(){
+  const m = document.getElementById('modal-cancelar');
+  if (!m) return;
+  // limpia input y botón
+  const inp = document.getElementById('cancel-id');
+  if (inp) inp.value = '';
+  const btn = document.getElementById('btn-cancelar-enviar');
+  if (btn) resetBtn(btn, 'Confirmar cancelación');
+
+  m.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeCancelModal(){
+  const m = document.getElementById('modal-cancelar');
+  if (!m) return;
+  m.classList.remove('active');
+  document.body.style.overflow = 'auto';
+}
+
+// Eventos del botón y modal de cancelar
+document.addEventListener('DOMContentLoaded', () => {
+  const openBtn  = document.getElementById('open-cancel-modal');
+  const closeBtn = document.getElementById('close-cancel-modal');
+  const cancelForm = document.getElementById('cancelForm');
+
+  if (openBtn)  openBtn.addEventListener('click', openCancelModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeCancelModal);
+
+  // Cerrar al clickear fuera del contenido (como el resto de modales)
+  const modal = document.getElementById('modal-cancelar');
+  if (modal){
+    modal.addEventListener('click', (e)=>{
+      if (e.target === modal) closeCancelModal();
+    });
+  }
+
+  if (cancelForm){
+    cancelForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+
+      const idVal = document.getElementById('cancel-id')?.value?.trim();
+      if (!idVal){
+        showSnackbar('Ingrese un ID válido', 'error', 2500);
+        return;
+      }
+
+      const btn = document.getElementById('btn-cancelar-enviar');
+      setBtnLoading(btn);
+
+      try{
+        const result = await cancelarReservaEnGoogleSheets(idVal);
+        if (result.success){
+          setBtnSuccess(btn, 'Cancelada');
+          showSnackbar(`Reserva ${idVal} cancelada correctamente.`, 'success', 3200);
+          setTimeout(() => {
+            closeCancelModal();
+            resetBtn(btn, 'Confirmar cancelación');
+          }, 900);
+        }else{
+          setBtnError(btn, 'Error');
+          showSnackbar(result.message || 'No se pudo cancelar la reserva', 'error', 3200);
+          setTimeout(() => resetBtn(btn, 'Confirmar cancelación'), 1200);
+        }
+      }catch(err){
+        console.error(err);
+        setBtnError(btn, 'Error');
+        showSnackbar('Error de conexión al cancelar', 'error', 3200);
+        setTimeout(() => resetBtn(btn, 'Confirmar cancelación'), 1200);
+      }
+    });
+  }
+});
+
+// Llamada al Apps Script para cancelar
+async function cancelarReservaEnGoogleSheets(idReserva){
+  const payload = new URLSearchParams({
+    secret: CONFIG.secretKey,
+    action: 'cancelarReserva',
+    idReserva: String(idReserva)
+  });
+
+  const resp = await fetch(CONFIG.googleScriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: payload
+  });
+
+  return resp.json();
+}
+
+
+//NUEVo snackBAR
+

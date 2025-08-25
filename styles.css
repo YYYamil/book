@@ -1327,3 +1327,69 @@
 @media (max-width: 900px){
   .form-row-qty{ grid-template-columns: 1fr; }
 }
+
+/* Botón grande fuera de los modales (igual ancho visual que tarjetas) */
+.btn-cancelar{
+  width: 100%;
+  max-width: 1200px;        /* similar a tu .container principal */
+  margin: 20px auto 0;
+  display: block;
+  background: linear-gradient(to right, #d9534f, #c9302c);
+  color: #fff;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s ease;
+  box-shadow: 0 4px 10px rgba(217,83,79,.25);
+}
+.btn-cancelar:hover{ transform: translateY(-2px); }
+
+/* Botón rojo dentro del modal (re-usa tu “btn-submit” con estado de error) */
+.btn-cancelar-roja{
+  background: linear-gradient(to right, #d9534f, #c9302c);
+  color: #fff;
+}
+.btn-cancelar-roja.is-loading .btn-icon{
+  border: 3px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+}
+.btn-cancelar-roja.is-error{ background: #c9302c; }
+
+
+
+/*Estilos para la X del css*/
+/* Asegura que el snackbar sea el contenedor de referencia de la X */
+.snackbar{
+  position: fixed;                 /* ya lo tendrás, reforzamos */
+  bottom: 20px; left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 44px 12px 16px;    /* espacio a la derecha para la X */
+  border-radius: 8px;
+  color: #fff;
+  z-index: 99999;                  /* por delante de todo */
+  pointer-events: auto;
+  position: fixed;
+  /* si usas flex está ok, pero que no afecte a la X absoluta */
+  display: flex;
+  align-items: center;
+}
+
+/* Botón X arriba-derecha, clicable */
+.snackbar-close{
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;                    /* mayor área de clic */
+  pointer-events: auto;
+}
+.snackbar-close:hover{ opacity: .85; }
+
