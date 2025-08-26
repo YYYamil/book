@@ -181,9 +181,9 @@ async function submitForm(albergue) {
       setBtnSuccess(btn);
 // showSnackbar('PRE-Reserva Realizada: Para su confirmación, llamar al (0381)452-6408.', 'success', 10000);
 showSnackbar(
-  `PRE-Reserva Realizada (ID: ${resultado.idReserva}). Para su confirmación, llamar al (0381)452-6408.`,
+  `PRE-Reserva Realizada \n Nro: ${resultado.idReserva}.\n Para su confirmación, llamar al:\n (0381)452-6408.`,
   'success',
-  10000
+  15000
 );
 
 
@@ -715,7 +715,7 @@ function ensureSnackbar() {
 //   }, duration);
 // }
 
-function showSnackbar(message, type = 'success', duration = 1800) {
+function showSnackbar(message, type = 'success', duration = 10000) {
   const bar = ensureSnackbar();
   bar.classList.remove('success','error','show');
   bar.classList.add(type === 'error' ? 'error' : 'success');
@@ -1150,7 +1150,4 @@ async function cancelarReservaEnGoogleSheets(idReserva){
 
   return resp.json();
 }
-
-
-//NUEVo snackBAR
 

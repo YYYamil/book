@@ -1375,6 +1375,8 @@
   /* si usas flex está ok, pero que no afecte a la X absoluta */
   display: flex;
   align-items: center;
+  pointer-events: auto;  /* evita click-through */
+
 }
 
 /* Botón X arriba-derecha, clicable */
@@ -1393,3 +1395,17 @@
 }
 .snackbar-close:hover{ opacity: .85; }
 
+/* Permite seleccionar el texto del mensaje */
+.snackbar-message{
+  user-select: text;
+  -webkit-user-select: text;
+  -ms-user-select: text;
+  cursor: text;
+  white-space: pre-wrap;
+  flex: 1; /* si usas flex en .snackbar, empuja el texto y deja la X a la derecha */
+}
+
+/* Asegura que su contenido también reciba eventos */
+.snackbar *{
+  pointer-events: auto;
+}
