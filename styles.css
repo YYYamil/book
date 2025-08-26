@@ -1331,7 +1331,7 @@
 /* Botón grande fuera de los modales (igual ancho visual que tarjetas) */
 .btn-cancelar{
   width: 100%;
-  max-width: 1200px;        /* similar a tu .container principal */
+  max-width: 350px;        /* similar a tu .container principal */
   margin: 20px auto 0;
   display: block;
   background: linear-gradient(to right, #d9534f, #c9302c);
@@ -1408,4 +1408,16 @@
 /* Asegura que su contenido también reciba eventos */
 .snackbar *{
   pointer-events: auto;
+}
+
+/* Quitar flechas en Chrome, Safari, Edge */
+.no-spinners::-webkit-outer-spin-button,
+.no-spinners::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Quitar flechas en Firefox */
+.no-spinners {
+  -moz-appearance: textfield;
 }

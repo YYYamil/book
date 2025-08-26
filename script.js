@@ -1114,14 +1114,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await cancelarReservaEnGoogleSheets(idVal);
         if (result.success){
           setBtnSuccess(btn, 'Cancelada');
-          showSnackbar(`Reserva ${idVal} cancelada correctamente.`, 'success', 3200);
+          showSnackbar(`Reserva ${idVal} cancelada correctamente.`, 'success', 8200);
           setTimeout(() => {
             closeCancelModal();
             resetBtn(btn, 'Confirmar cancelación');
           }, 900);
         }else{
           setBtnError(btn, 'Error');
-          showSnackbar(result.message || 'No se pudo cancelar la reserva', 'error', 3200);
+          showSnackbar(result.message || 'No se pudo cancelar la reserva', 'error', 8200);
           setTimeout(() => resetBtn(btn, 'Confirmar cancelación'), 1200);
         }
       }catch(err){
@@ -1151,3 +1151,8 @@ async function cancelarReservaEnGoogleSheets(idReserva){
   return resp.json();
 }
 
+document.getElementById("cancel-id").addEventListener("input", function() {
+  if (this.value.length > 4) {
+    this.value = this.value.slice(0, 4); // limita a 4 dígitos
+  }
+});
