@@ -1156,3 +1156,654 @@ document.getElementById("cancel-id").addEventListener("input", function() {
     this.value = this.value.slice(0, 4); // limita a 4 dígitos
   }
 });
+
+
+///////////////////////////////////////////////////////////////////
+
+
+
+// Estado para calendario de alojamiento (solo maestro por ahora)
+const estadoCalendarioAlo = {
+  maestro: { mes: new Date().getMonth(), año: new Date().getFullYear(), startISO: null, endISO: null, range: [], diasValidos: [] }
+};
+
+// Cache para fechas ocupadas en alojamiento (se actualizará desde GS, similar)
+let fechasOcupadasAlo = { maestro: [] };
+
+// Ocupación actual para alojamiento
+let ocupacionActualAlo = { maestro: 0 };
+
+// Estado de envío para alojamiento
+const formSubmissionStateAlo = { maestro: { isSubmitting: false } };
+
+// Funciones para modales de alojamiento
+function openAlojamientoModal(albergue) {
+  console.log(`Abriendo modal de alojamiento para ${albergue}`);
+  document.getElementById(`modal-alojamiento-${albergue}`).classList.add('active');
+  document.body.style.overflow = 'hidden';
+  resetFormAlo(albergue);
+  resetCalendarAloToToday(albergue);
+  resetOcupacionUIAlo(albergue); // Limpia barra
+  fechasOcupadasAlo[albergue] = []; // Reset cache al abrir
+  generarCalendarioAlo(albergue);
+}
+
+function closeAlojamientoModal(albergue) {
+  console.log(`Cerrando modal de alojamiento para ${albergue}`);
+  document.getElementById(`modal-alojamiento-${albergue}`).classList.remove('active');
+  document.body.style.overflow = 'auto';
+  resetFormAlo(albergue);
+}
+
+// Cerrar al click fuera (igual)
+window.onclick = (function(original) {
+  return function(event) {
+    original.call(this, event);
+    if (event.target.classList.contains('modal') && event.target.id.startsWith('modal-alojamiento-')) {
+      const albergue = event.target.id.split('-')[2];
+      closeAlojamientoModal(albergue);
+    }
+  };
+})(window.onclick || function(){});
+
+// Setup listeners (igual, pero asegúrate de que esté en DOMContentLoaded)
+document.addEventListener('DOMContentLoaded', function() {
+  const aloForm = document.getElementById('aloFormMaestro');
+  if (aloForm) {
+    aloForm.addEventListener('submit', handleFormSubmitAlo);
+  }
+  setupCantidadLimitsAlo();
+});
+
+
+
+
+function handleFormSubmitAlo(e) {
+  e.preventDefault();
+  const albergue = 'maestro'; // Fijo por ahora
+  if (formSubmissionStateAlo[albergue].isSubmitting) return;
+  formSubmissionStateAlo[albergue].isSubmitting = true;
+  submitFormAlo(albergue).finally(() => {
+    formSubmissionStateAlo[albergue].isSubmitting = false;
+  });
+}
+
+async function submitFormAlo(albergue) {
+  const formData = getFormDataAlo(albergue);
+  if (!formData.institucion || !formData.cantidad || formData.range.length === 0) {
+    alert("Complete institución, cantidad y seleccione un rango válido");
+    return;
+  }
+  
+  if (formData.range.length > 4) {
+    alert("El rango no puede exceder 4 días");
+    return;
+  }
+  
+  const btn = getSubmitButtonAlo(albergue);
+  setBtnLoading(btn);
+  
+ try {
+    const formData = getFormDataAlo(albergue);
+    const estado = estadoCalendarioAlo[albergue];
+    
+    // NUEVO: Chequea si todos los días son válidos
+    if (estado.diasValidos.length < formData.range.length) {
+      alert(`No todos los días en el rango tienen suficientes camas para ${formData.cantidad} personas. Revise los días en rojo.`);
+      return;
+    }
+    
+    // Chequeo adicional de disp (igual, pero ahora redundante con diasValidos)
+    let minDisponibles = Infinity;
+    for (let fechaISO of formData.range) {
+      const disp = await obtenerDisponibilidadDia(albergue, fechaISO);
+      const disponibles = disp.disponibles;
+      if (disponibles < formData.cantidad) {
+        throw new Error(`No hay suficientes camas el ${fechaISO}`);
+      }
+      minDisponibles = Math.min(minDisponibles, disponibles);
+    }
+  } catch (err) {
+    console.error(err);
+    setBtnError(btn, 'Error');
+    showSnackbar(`Error: ${err.message}`, 'error', 2200);
+    setTimeout(() => resetBtn(btn), 1200);
+  }
+}
+
+function getFormDataAlo(albergue) {
+const cantidad = parseInt(document.getElementById(`cantidad-alo-${albergue}`).value, 10);  return {
+    albergue,
+    institucion: document.getElementById(`institucion-alo-${albergue}`).value,
+    cantidad: parseInt(document.getElementById(`cantidad-alo-${albergue}`).value),
+    range: estado.range // Array de ISOs en el rango
+  };
+}
+
+function mostrarConfirmacionAlo(albergue, formData, idReserva) {
+  console.log(`Confirmación alojamiento ${albergue}, ID: ${idReserva}, Rango: ${formData.range.join(', ')}`);
+  // Opcional: alert similar al existente, pero con rango
+}
+
+
+
+async function mostrarInfoDiaAlo(albergue, iso) {
+  showCalendarLoadingAlo(albergue);
+  try {
+    const disp = await obtenerDisponibilidadDiaAlo(albergue, iso);
+    const cap = capacidades[albergue]; // Reutiliza
+    const ocupados = cap - disp.disponibles;
+    updateOcupacionUIAlo(albergue, ocupados, cap);
+    const spanDisp = document.getElementById(`disponibles-alo-${albergue}`);
+    if (spanDisp) spanDisp.textContent = disp.disponibles;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    hideCalendarLoadingAlo(albergue);
+  }
+}
+function resetFormAlo(albergue) {
+  const form = document.getElementById('aloFormMaestro');
+  if (form) form.reset();
+  document.getElementById(`cantidad-alo-${albergue}`).value = ''; // Limpia cantidad arriba
+  const estado = estadoCalendarioAlo[albergue];
+  resetRangoAlo(albergue); // Usa reset extendido
+}
+
+// Listener para cantidad: Re-valida rango si existe
+function setupCantidadListenerAlo() {
+  const input = document.getElementById('cantidad-alo-maestro');
+  if (!input) return;
+  input.addEventListener('input', () => {
+    const cantidad = parseInt(input.value, 10) || 0;
+    const estado = estadoCalendarioAlo.maestro;
+    if (estado.range.length > 0 && cantidad > 0) {
+      // Re-chequea y recolorea
+      mostrarInfoRangoAlo(maestro, estado.range);
+    }
+  });
+}
+
+// Helpers para botones (igual)
+function getSubmitButtonAlo(albergue) {
+  const form = document.getElementById('aloFormMaestro');
+  return form ? form.querySelector('.btn-submit') : null;
+}
+
+// Funciones para calendario de alojamiento
+function generarCalendarioAlo(albergue) {
+  const estado = estadoCalendarioAlo[albergue];
+  const { mes, año } = estado;
+  
+  const primerDia = new Date(año, mes, 1);
+  const ultimoDia = new Date(año, mes + 1, 0);
+  const primerDiaSemana = primerDia.getDay();
+  const diasEnMes = ultimoDia.getDate();
+  
+  const contenedor = document.getElementById(`calendario-alo-${albergue}`);
+  if (!contenedor) return;
+  contenedor.innerHTML = '';
+  
+  // Headers (igual)
+  CONFIG.diasSemanaCortos.forEach(dia => {
+    const diaHeader = document.createElement('div');
+    diaHeader.className = 'dia-header';
+    diaHeader.textContent = dia;
+    contenedor.appendChild(diaHeader);
+  });
+  
+  // Offset (igual)
+  for (let k = 0; k < primerDiaSemana; k++) {
+    contenedor.appendChild(crearDiaElementoAlo('', 'otro-mes'));
+  }
+  
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  
+  for (let i = 1; i <= diasEnMes; i++) {
+    const fechaActual = new Date(año, mes, i);
+    fechaActual.setHours(0,0,0,0);
+    const iso = isoFromYMD(año, mes, i);
+    
+    const estaOcupado = fechasOcupadasAlo[albergue].some(f => f.toDateString() === fechaActual.toDateString());
+    const esPasado = fechaActual < hoy;
+    
+    let clases = [];
+    if (estaOcupado) clases.push('ocupado');
+    if (esPasado) clases.push('inactiva');
+    
+    // Highlights de rango (ÚNICO BLOQUE - removí duplicado)
+    if (estado.range.includes(iso)) {
+      clases.push('en-rango');
+      if (estado.startISO === iso) clases.push('inicio-rango');
+      if (estado.endISO === iso) clases.push('fin-rango');
+      
+      // NUEVO: Colores verde/rojo si en diasValidos
+      if (estado.diasValidos.includes(iso)) {
+        clases.push('verde');
+      } else {
+        clases.push('rojo');
+      }
+    }
+    
+    const dia = crearDiaElementoAlo(i, clases.join(' '));
+    dia.dataset.iso = iso;
+    
+    if (fechaActual.getTime() === hoy.getTime()) {
+      dia.classList.add('hoy');
+    }
+    
+    // Click handler (igual)
+    if (!esPasado && !estaOcupado) {
+      dia.addEventListener('click', () => handleClickDiaAlo(albergue, iso, dia));
+    } else {
+      dia.tabIndex = -1;
+      dia.setAttribute('aria-disabled', 'true');
+    }
+    
+    contenedor.appendChild(dia);
+  }
+  
+  // Relleno (igual)
+  const totalCeldas = 42;
+  const usados = primerDiaSemana + diasEnMes;
+  const faltan = totalCeldas - usados;
+  for (let i = 0; i < faltan; i++) {
+    contenedor.appendChild(crearDiaElementoAlo('', 'otro-mes'));
+  }
+  
+  const titulo = document.getElementById(`mes-actual-alo-${albergue}`);
+  if (titulo) titulo.textContent = `${CONFIG.meses[mes]} ${año}`;
+  
+  console.log(`Calendario regenerado para ${albergue}. Rango actual:`, estado.range); // DEBUG: Ver si range se actualiza
+}
+
+function crearDiaElementoAlo(numero, claseExtra = '') {
+  const dia = document.createElement('div');
+  dia.className = `dia ${claseExtra}`;
+  dia.textContent = numero;
+  return dia;
+}
+function updateCalendarHighlightsAlo(albergue) {
+  generarCalendarioAlo(albergue);
+}
+
+
+function updateRangeDisplay(albergue, range) {
+  const display = document.getElementById(`fecha-range-display-alo-${albergue}`);
+//   if (display) {
+//     if (range.length === 0) {
+//       display.innerHTML = `
+        
+//         <span class="leyenda-color">
+//           <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
+//         </span>
+//         <span class="leyenda-color">
+//           <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
+//         </span>
+//       `;
+//     } else {
+//       const estado = estadoCalendarioAlo[albergue];
+//       const invalidos = range.length - estado.diasValidos.length;
+//       let extra = '';
+//       if (invalidos > 0) {
+//         extra = ` <span style="color: #f44336;">(¡${invalidos} días en rojo: insuficientes camas!)</span>`;
+//       }
+      
+//       // SIMPLIFICADO: Solo muestra conteo de días + warning, sin fechas específicas (evita desfase)
+//       display.innerHTML = `
+//         ${range.length} días seleccionados${extra}.
+//         <span class="leyenda-color">
+//           <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
+//         </span>
+//         <span class="leyenda-color">
+//           <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles.
+//         </span>
+//       `;
+//     }
+//   }
+   console.log(`Display actualizado: rango length=${range.length}`); // DEBUG (remueve si no necesitas)
+}
+
+function handleClickDiaAlo(albergue, iso, cell) {
+  const estado = estadoCalendarioAlo[albergue];
+  const [year, month, day] = iso.split('-').map(Number); // FIX: Parsea local
+  const fechaClick = new Date(year, month - 1, day); // Local explícito
+  const startDate = estado.startISO ? (() => {
+    const [sYear, sMonth, sDay] = estado.startISO.split('-').map(Number);
+    return new Date(sYear, sMonth - 1, sDay); // Local
+  })() : null;
+  
+  console.log(`Click en ${iso}. Start actual: ${estado.startISO}, End: ${estado.endISO}`); // DEBUG
+  
+  if (!estado.startISO) {
+    // Primer click
+    estado.startISO = iso;
+    estado.endISO = null;
+    estado.range = [iso];
+    console.log(`Nuevo start: ${iso}, range: [${iso}]`); // DEBUG
+    updateCalendarHighlightsAlo(albergue);
+    updateRangeDisplay(albergue, estado.range);
+    mostrarInfoDiaAlo(albergue, iso);
+  } else if (!estado.endISO) {
+    const diffDias = Math.floor((fechaClick - startDate) / (1000 * 60 * 60 * 24));
+    
+    console.log(`Diff días: ${diffDias} (start: ${estado.startISO}, click: ${iso})`); // DEBUG
+    
+    if (diffDias < 0) {
+      // Mueve start
+      estado.startISO = iso;
+      estado.endISO = null;
+      estado.range = [iso];
+      console.log(`Start movido a ${iso}`); // DEBUG
+      updateCalendarHighlightsAlo(albergue);
+      updateRangeDisplay(albergue, estado.range);
+      mostrarInfoDiaAlo(albergue, iso);
+    } else if (diffDias > 3) {
+      // Excede
+      console.log(`Alerta: Excede 4 días (diff=${diffDias})`); // DEBUG
+      alert("El rango no puede exceder 4 días consecutivos");
+      return;
+    } else {
+      // Set end y llena rango (loop igual, ya funciona)
+      estado.endISO = iso;
+      estado.range = [];
+      let current = new Date(startDate);
+      while (current <= fechaClick) {
+        const currentIso = current.toISOString().split('T')[0];
+        estado.range.push(currentIso);
+        current.setDate(current.getDate() + 1);
+      }
+      console.log(`Rango final: [${estado.range.join(', ')}], length=${estado.range.length}`); // DEBUG
+      if (estado.range.length !== diffDias + 1) {
+        alert("Error en selección de rango. Intente de nuevo.");
+        resetRangoAlo(albergue);
+        return;
+      }
+      updateCalendarHighlightsAlo(albergue);
+      updateRangeDisplay(albergue, estado.range);
+      mostrarInfoRangoAlo(albergue, estado.range);
+    }
+  } else {
+    // Reinicia
+    console.log('Reiniciando rango completo'); // DEBUG
+    resetRangoAlo(albergue);
+    handleClickDiaAlo(albergue, iso, cell);
+  }
+}
+
+
+
+
+function resetRangoAlo(albergue) {
+  const estado = estadoCalendarioAlo[albergue];
+  estado.startISO = null;
+  estado.endISO = null;
+  estado.range = [];
+  estado.diasValidos = []; // Nuevo: Limpia validación
+  updateRangeDisplay(albergue, []);
+  updateCalendarHighlightsAlo(albergue);
+}
+
+
+
+
+// En mostrarInfoRangoAlo: Setea diasValidos basado en disp >= cantidad
+async function mostrarInfoRangoAlo(albergue, range) {
+  const cap = capacidades[albergue];
+  const cantidad = parseInt(document.getElementById(`cantidad-alo-${albergue}`).value, 10) || 0;
+  if (cantidad === 0) return; // No valida si cantidad no ingresada
+  
+  let minDisp = cap;
+  const diasValidos = []; // Nuevo: Solo ISOs con disp >= cantidad
+  const fullDays = [];
+  
+  for (let iso of range) {
+    try {
+      const disp = await obtenerDisponibilidadDia(albergue, iso);
+      const disponibles = disp.disponibles || cap;
+      minDisp = Math.min(minDisp, disponibles);
+      
+      if (disponibles >= cantidad) {
+        diasValidos.push(iso); // Verde
+      } // Sino, rojo (no push)
+      
+      if (disponibles <= 0) fullDays.push(new Date(iso + 'T00:00:00'));
+    } catch (e) {
+      console.warn(`Error en disp para ${iso}:`, e);
+      // Asume inválido si error
+    }
+  }
+  
+  const estado = estadoCalendarioAlo[albergue];
+  estado.diasValidos = diasValidos; // Set estado para generarCalendarioAlo
+  
+  if (fullDays.length > 0) {
+    fechasOcupadasAlo[albergue] = [...new Set([...fechasOcupadasAlo[albergue], ...fullDays])];
+    generarCalendarioAlo(albergue);
+  } else {
+    generarCalendarioAlo(albergue); // Regenera para colores
+  }
+  
+  const maxOcupados = cap - minDisp;
+  updateOcupacionUIAlo(albergue, maxOcupados, cap);
+  const spanDisp = document.getElementById(`disponibles-alo-${albergue}`);
+  if (spanDisp) spanDisp.textContent = minDisp;
+  
+  // Validación global: Si no todos válidos, alerta opcional
+  if (diasValidos.length < range.length) {
+    showSnackbar(`Advertencia: ${range.length - diasValidos.length} días no tienen suficientes camas para ${cantidad} personas.`, 'error', 5000);
+  }
+}
+
+// En resetRangoAlo: limpiar highlights
+function resetRangoAlo(albergue) {
+  const estado = estadoCalendarioAlo[albergue];
+  estado.startISO = null;
+  estado.endISO = null;
+  estado.range = [];
+  updateRangeDisplay(albergue, []);
+  updateCalendarHighlightsAlo(albergue); // Regenera sin highlights
+}
+
+// En openAlojamientoModal: reset ocupacion y cache si necesario
+function openAlojamientoModal(albergue) {
+  console.log(`Abriendo modal de alojamiento para ${albergue}`);
+  document.getElementById(`modal-alojamiento-${albergue}`).classList.add('active');
+  document.body.style.overflow = 'hidden';
+  resetFormAlo(albergue);
+  resetCalendarAloToToday(albergue);
+  resetOcupacionUIAlo(albergue); // Limpia barra
+  fechasOcupadasAlo[albergue] = []; // Reset cache al abrir
+  generarCalendarioAlo(albergue);
+}
+
+function cambiarMesAlo(albergue, direccion) {
+  const estado = estadoCalendarioAlo[albergue];
+  estado.mes += direccion;
+  if (estado.mes < 0) {
+    estado.mes = 11;
+    estado.año--;
+  } else if (estado.mes > 11) {
+    estado.mes = 0;
+    estado.año++;
+  }
+  generarCalendarioAlo(albergue);
+}
+
+function resetCalendarAloToToday(albergue) {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  const iso = formatDate(now);
+  const estado = estadoCalendarioAlo[albergue];
+  estado.mes = now.getMonth();
+  estado.año = now.getFullYear();
+  resetRangoAlo(albergue);
+}
+
+// Funciones de loading (similar a existentes)
+function showCalendarLoadingAlo(albergue) {
+  const overlay = document.getElementById(`cal-loader-alo-${albergue}`);
+  if (overlay) overlay.hidden = false;
+  const grid = document.getElementById(`calendario-alo-${albergue}`);
+  if (grid) grid.classList.add('cal-block');
+}
+
+function hideCalendarLoadingAlo(albergue) {
+  const overlay = document.getElementById(`cal-loader-alo-${albergue}`);
+  if (overlay) overlay.hidden = true;
+  const grid = document.getElementById(`calendario-alo-${albergue}`);
+  if (grid) grid.classList.remove('cal-block');
+}
+
+function updateOcupacionUIAlo(albergue, ocupados, capacidad) {
+  const percent = capacidad > 0 ? Math.round((ocupados / capacidad) * 100) : 0;
+  const fill = document.getElementById(`ocupacion-fill-alo-${albergue}`);
+  if (fill) fill.style.width = `${percent}%`;
+  const info = document.getElementById(`ocupacion-info-alo-${albergue}`);
+  if (info) info.textContent = `${ocupados}/${capacidad} Camas ocupadas`;
+}
+
+function resetOcupacionUIAlo(albergue) {
+  const fill = document.getElementById(`ocupacion-fill-alo-${albergue}`);
+  if (fill) fill.style.width = '0%';
+  const info = document.getElementById(`ocupacion-info-alo-${albergue}`);
+  if (info) info.textContent = '—';
+  const disp = document.getElementById(`disponibles-alo-${albergue}`);
+  if (disp) disp.textContent = '—';
+}
+
+// Interacción con GS para alojamiento (nueva action)
+async function enviarReservaAlojamientoAGoogleSheets(data) {
+  const payload = {
+    secret: CONFIG.secretKey,
+    action: "crearReservaAlojamiento",
+    albergue: toFullName(data.albergue),
+    institucion: data.institucion,
+    cantidad: data.cantidad,
+    rangoFechas: data.range.join(','), // "yyyy-MM-dd,yyyy-MM-dd,..."
+  };
+  
+  const response = await fetch(CONFIG.googleScriptUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(payload)
+  });
+  
+  return await response.json();
+}
+
+// async function obtenerDisponibilidadDiaAlo(albergueKey, fechaISO) {
+//   const payload = new URLSearchParams({
+//     secret: CONFIG.secretKey,
+//     action: 'obtenerDisponibilidadDiaAlojamiento', // Nueva action para sheets de alojamiento
+//     albergue: toFullName(albergueKey),
+//     fecha: fechaISO
+//   });
+  
+//   const resp = await fetch(CONFIG.googleScriptUrl, {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+//     body: payload
+//   });
+  
+//   const json = await resp.json();
+//   if (!json.success) throw new Error(json.message || 'Error');
+//   return { disponibles: json.disponibles, capacidad: json.capacidad };
+// }
+
+
+// Para testing: Mock de obtenerDisponibilidadDiaAlo (comenta el fetch real hasta que .gs esté listo)
+// async function obtenerDisponibilidadDiaAlo(albergueKey, fechaISO) {
+//   // Mock: Siempre 92 disponibles (capacidad full)
+//   return { disponibles: 92, capacidad: 92 };
+// }
+
+// O si quieres simular algunos full:
+// async function obtenerDisponibilidadDiaAlo(albergueKey, fechaISO) {
+//   const fecha = new Date(fechaISO);
+//   const day = fecha.getDate();
+//   const disponibles = (day % 5 === 0) ? 0 : 92; // e.g., día 5 full
+//   return { disponibles, capacidad: 92 };
+// }
+
+// Función real (comenta el mock cuando .gs esté listo)
+async function obtenerDisponibilidadDiaAlo(albergueKey, fechaISO) {
+  const payload = new URLSearchParams({
+    secret: CONFIG.secretKey,
+    action: 'obtenerDisponibilidadDiaAlojamiento',
+    albergue: toFullName(albergueKey),
+    fecha: fechaISO
+  });
+  
+  const resp = await fetch(CONFIG.googleScriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: payload
+  });
+  
+  const json = await resp.json();
+  if (!json.success) {
+    console.warn(`Mocking disponibilidad para ${fechaISO} (GS no responde)`); // WARN en vez de error
+    return { disponibles: 92, capacidad: 92 }; // Fallback mock
+  }
+  return { disponibles: json.disponibles, capacidad: json.capacidad };
+}
+// Límites para cantidad en alojamiento (similar a setupCantidadLimits)
+function setupCantidadLimitsAlo() {
+  const albergue = 'maestro';
+  const input = document.getElementById(`cantidad-alo-${albergue}`);
+  if (!input) return;
+  
+  input.min = '1';
+  input.max = capacidades[albergue]; // 92 para maestro
+  input.placeholder = `máx ${capacidades[albergue]}`;
+  
+  input.addEventListener('input', () => {
+    let v = parseInt(input.value, 10);
+    if (isNaN(v) || v < 1) v = 1;
+    if (v > capacidades[albergue]) v = capacidades[albergue];
+    input.value = v;
+  });
+}
+
+function lockFechaInputsAlo() {
+  // No aplica por ahora, pero placeholder para expansión
+}
+
+/*para el recuadro de colores en el dia del rango*/
+
+function updateRangeDisplay(albergue, range) {
+  const display = document.getElementById(`fecha-range-display-alo-${albergue}`);
+  if (!display) return;
+  
+  if (range.length === 0) {
+    display.innerHTML = `
+      Estadia de hasta 4 días y 3 noches consecutivos. 
+      <span class="leyenda-color">
+        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
+      </span>
+      <span class="leyenda-color">
+        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
+      </span>
+    `;
+  } else {
+    const start = new Date(range[0]);
+    const end = new Date(range[range.length - 1]);
+    const estado = estadoCalendarioAlo[albergue];
+    const invalidos = range.length - estado.diasValidos.length;
+    let extra = '';
+    // if (invalidos > 0) {
+    //   extra = ` <span style="color: #f44336;">(¡${invalidos} días en rojo: insuficientes camas!)</span>`;
+    // }
+    display.innerHTML = `
+       Su seleccion es: ${range.length} días${extra} y ${range.length - 1} ${extra} noches.
+       <br>
+      <span class="leyenda-color">
+        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
+      </span>
+      <span class="leyenda-color">
+        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles.
+      </span>
+    `;
+  }
+}

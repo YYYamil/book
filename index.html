@@ -108,7 +108,10 @@
 
 
                     </div>
-                    <button class="btn-reservar" onclick="openModal('maestro')">Reservar Ahora</button>
+                    <button class="btn-reservar" onclick="openModal('maestro')">Reservar Visita</button>
+                    <!-- Nuevo Boton alojamiento -->
+                    <button class="btn-alo" onclick="openAlojamientoModal('maestro')">Reserva Alojamiento</button>
+                    
                     <div class="map-container">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3558.3469779765946!2d-65.19288722381081!3d-26.89248109236016!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94225a28fd68b2a5%3A0x9e70e2029ffb5445!2sAlbergue%20Maestro%20Jos%C3%A9%20Fierro!5e0!3m2!1sen!2sar!4v1753473767982!5m2!1sen!2sar" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
@@ -265,7 +268,7 @@
     </div>
 
     <!-- Modal para Albergue Maestro José Fierro -->
-                            <div id="modal-maestro" class="modal">
+                   <div id="modal-maestro" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Reserva - Albergue Maestro José Fierro</h3>
@@ -388,6 +391,98 @@
         </div>
       </div>
 
+
+    <!-- Nuevo modal para Reserva Alojamiento  -->
+
+<div id="modal-alojamiento-maestro" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Reserva Alojamiento - Albergue Maestro José Fierro</h3>
+            <button class="close-modal" onclick="closeAlojamientoModal('maestro')">&times;</button>
+        </div>
+
+        
+        <div class="modal-body">
+    <!-- Campo cantidad ANTES del calendario (fuera del form para accesibilidad temprana) -->
+    <!-- <div class="cantidad-section">
+        <label for="cantidad-alo-maestro">Cantidad de Camas a Reservar:</label>
+        <input type="number" id="cantidad-alo-maestro" name="cantidad" min="1" required placeholder="máx 92">
+    </div> -->
+    
+    <!-- Resto replicando .disponibilidad-section del modal original -->
+ 
+<div class="title">
+    <div class="form-row">
+        <label for="cantidad-alo-maestro">
+            <i class="fas fa-bed"></i>
+            Ingrese cantidad de camas a reservar:
+        </label>
+        <input type="number" id="cantidad-alo-maestro" name="cantidad" min="1" max="92" required placeholder="máx. 92">
+    </div>
+    <div class="form-row">
+        <label>
+            <i class="fas fa-calendar-alt"></i>
+            Seleccione el rango de días para realizar la reserva:
+        </label>
+    </div>
+
+                
+        
+        <!-- Calendario header (igual) -->
+        <div class="calendario-header">
+            <button class="nav-mes" onclick="cambiarMesAlo('maestro', -1)"><i class="fas fa-chevron-left"></i></button>
+            <span id="mes-actual-alo-maestro">Noviembre 2024</span>
+            <button class="nav-mes" onclick="cambiarMesAlo('maestro', 1)"><i class="fas fa-chevron-right"></i></button>
+        </div>
+
+                                
+        <div id="cal-loader-alo-maestro" class="cal-loader" hidden aria-busy="false"></div>
+        <div id="calendario-alo-maestro" class="calendario-grid"></div>
+         
+        
+    </div>
+
+
+     <!-- Texto de rango (debajo del calendario) -->
+    <div class="fecha-range-info" id="fecha-range-display-alo-maestro">
+    Seleccione un rango de hasta 4 días consecutivos. 
+    <span class="leyenda-color">
+        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
+    </span>
+    <span class="leyenda-color">
+        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
+    </span>
+</div>
+    
+    <!-- Formulario simplificado (solo institución y botón, abajo) -->
+    <form id="aloFormMaestro">
+        <div class="form-group">
+                    <label for="institucion-maestro">Institución/Delegación</label>
+                    <input type="text" id="institucion-alo-maestro" class="form-control" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="responsable-maestro">Nombre Completo del Responsable</label>
+                    <input type="text" id="responsable-alo-maestro" class="form-control" required>
+                  </div>
+
+                  <div class="form-group">
+                <label for="contacto-tinku">Contacto (Número Telefónico)</label>
+                <input type="tel" id="contacto-alo-maestro" class="form-control" required>
+              </div>
+
+                
+
+        
+        <button type="submit" class="btn-submit">
+            <span class="btn-label">Confirmar Reserva</span>
+        </button>
+    </form>
+</div>
+    </div>
+</div>
+
+
     <!-- Modal para Albergue Tinku Huasi -->
                     <div id="modal-tinku" class="modal">
   <div class="modal-content">
@@ -498,7 +593,7 @@
 
     <!-- Modal para Albergue Aquilina Soldati -->
                     <div id="modal-aquilina" class="modal">
-  <div class="modal-content">
+                    <div class="modal-content">
     <div class="modal-header aquilina">
       <h3 class="modal-title">Reserva - Albergue Aquilina Soldati</h3>
       <button class="close-modal" onclick="closeModal('aquilina')">&times;</button>
@@ -597,9 +692,12 @@
 
 
       </div>
+    
+    
     </div>
-  </div>
 
+
+  </div>
  </div>
 
 

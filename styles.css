@@ -256,6 +256,41 @@
             transform: translateY(0);
         }
 
+        .btn-alo {
+            width: 100%;
+            background: linear-gradient(to right, var(--azul), #004a8c);
+            color: var(--blanco);
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Roboto', sans-serif;
+            box-shadow: 0 4px 8px rgba(0, 92, 162, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .btn-alo.aquilina {
+            background: linear-gradient(to right, var(--amarillo), #e6b500);
+            color: var(--gris-oscuro);
+        }
+
+        .btn-alo.tinku {
+            background: linear-gradient(to right, var(--celeste), #6abde6);
+            color: var(--azul);
+        }
+
+        .btn-alo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-alo:active {
+            transform: translateY(0);
+        }
+
         .map-container {
             height: 200px;
             border-radius: 10px;
@@ -1420,4 +1455,132 @@
 /* Quitar flechas en Firefox */
 .no-spinners {
   -moz-appearance: textfield;
+}
+
+/*///////////////////**/
+/* Colores para validación en rango */
+.dia.en-rango.verde {
+  background-color: #4CAF50 !important; /* Verde para disponible */
+  color: white;
+}
+.dia.en-rango.rojo {
+  background-color: #f44336 !important; /* Rojo para no disponible */
+  color: white;
+}
+/* Mantén en-rango base para días no validados aún */
+.dia.en-rango:not(.verde):not(.rojo) {
+  background-color: #e3f2fd !important; /* Azul claro neutral */
+  color: #1976d2;
+}
+.dia.inicio-rango, .dia.fin-rango {
+  border: 2px solid #2196f3 !important; /* Borde azul para start/end, sobre colores */
+}
+
+
+
+  
+
+        .title {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-row label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #005CA2;
+    white-space: nowrap;
+}
+
+#cantidad-alo-maestro {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    width: 120px;
+    font-size: 14px;
+}
+
+#cantidad-alo-maestro:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.fas {
+    color: #005CA2;
+    width: 16px;
+    text-align: center;
+}
+
+
+/*para el los recuadros rojo y verde del modal de dias disponibles*/
+.fecha-range-info {
+    margin: 10px 0;
+    font-style: italic;
+    text-align: center;
+    font-size: 0.9em;
+    color: #666;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9; /* Fondo sutil para destacar como "leyenda" */
+}
+
+.leyenda-color {
+    display: inline-block;
+    margin: 0 15px;
+    vertical-align: middle;
+}
+
+.cuadrado {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    border-radius: 2px;
+    font-size: 12px;
+    line-height: 12px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.cuadrado.rojo {
+    background-color: #f44336; /* Rojo */
+    color: white;
+}
+
+.cuadrado.verde {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+}
+
+.texto-rojo {
+    color: #f44336;
+    font-weight: bold;
+}
+
+.texto-verde {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* Responsivo: En mobile, apila las leyendas */
+@media (max-width: 600px) {
+    .leyenda-color {
+        display: block;
+        margin: 5px 0;
+    }
 }
