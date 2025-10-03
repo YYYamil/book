@@ -1453,10 +1453,10 @@ function updateRangeDisplay(albergue, range) {
 //       display.innerHTML = `
 //         ${range.length} días seleccionados${extra}.
 //         <span class="leyenda-color">
-//           <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
+//           <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
 //         </span>
 //         <span class="leyenda-color">
-//           <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles.
+//           <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
 //         </span>
 //       `;
 //     }
@@ -1780,10 +1780,10 @@ function updateRangeDisplay(albergue, range) {
     display.innerHTML = `
       Estadia de hasta 4 días y 3 noches consecutivos. 
       <span class="leyenda-color">
-        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
+        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
       </span>
       <span class="leyenda-color">
-        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
+        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles.
       </span>
     `;
   } else {
@@ -1801,6 +1801,7 @@ function updateRangeDisplay(albergue, range) {
       <span class="leyenda-color">
         <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
       </span>
+      <br>
       <span class="leyenda-color">
         <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles.
       </span>
