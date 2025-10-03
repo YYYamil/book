@@ -1778,7 +1778,8 @@ function updateRangeDisplay(albergue, range) {
   
   if (range.length === 0) {
     display.innerHTML = `
-      Estadia de hasta 4 días y 3 noches consecutivos. 
+      Estadia de hasta 4 días y 3 noches consecutivos.
+      <br>
       <span class="leyenda-color">
         <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
       </span>
