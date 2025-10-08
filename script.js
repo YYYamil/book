@@ -1214,6 +1214,7 @@ document.addEventListener('DOMContentLoaded', function() {
     aloForm.addEventListener('submit', handleFormSubmitAlo);
   }
   setupCantidadLimitsAlo();
+  setupDelegacionListenerAlo();
 });
 
 
@@ -1299,11 +1300,19 @@ function getFormDataAlo(albergue) {
   }
   const estado = estadoCalendarioAlo[albergue];
   const cantidad = parseInt(document.getElementById(`cantidad-alo-${albergue}`).value, 10) || 0;
+
+      const delegacion = document.getElementById('delegacion-alo-maestro').value;
+  if (!delegacion) {
+    alert('Seleccione tipo de delegación');
+    return null;
+  }
+
   return {
     albergue,
     institucion: document.getElementById(`institucion-alo-${albergue}`).value.trim(),
     cantidad,
     range: estado.range // Array correcto para BD
+    //delegacion
   };
 }
 
@@ -1531,6 +1540,17 @@ function handleClickDiaAlo(albergue, iso, cell) {
       alert("El rango no puede exceder 4 días consecutivos");
       return;
     } else {
+
+
+        // NUEVO: Antes de set end, chequea límite por tipo
+  const select = document.getElementById('delegacion-alo-maestro');
+  const tipo = select.value;
+  const maxDias = tipo === 'escuelas' ? 4 : (tipo === 'otra' ? 3 : 4); // Default 4
+  if (diffDias + 1 > maxDias) { // +1 porque diff es días intermedios
+    alert(`Límite excedido según tipo de delegación (${tipo || 'no seleccionado'}): hasta ${maxDias} días.`);
+    return;
+    }
+
       // Set end y llena rango (loop igual, ya funciona)
       estado.endISO = iso;
       estado.range = [];
@@ -1580,6 +1600,11 @@ async function mostrarInfoRangoAlo(albergue, range) {
   const cantidad = parseInt(document.getElementById(`cantidad-alo-${albergue}`).value, 10) || 0;
   if (cantidad === 0) return; // No valida si cantidad no ingresada
   
+    if (!validarLimiteRangoAlo(albergue, range)) {
+    return; // Sale si excede (ya alertado y reseteado)
+  }
+
+
   let minDisp = cap;
   const diasValidos = [];
   const fullDays = [];
@@ -1854,4 +1879,37 @@ function updateRangeDisplay(albergue, range) {
       </span>
     `;
   }
+}
+
+function setupDelegacionListenerAlo() {
+  const select = document.getElementById('delegacion-alo-maestro');
+  if (!select) return;
+  
+  select.addEventListener('change', () => {
+    const albergue = 'maestro'; // Fijo
+    const hidden = document.getElementById('delegacion-hidden-alo-maestro');
+    if (hidden) hidden.value = select.value; // Sincroniza para envío
+    
+    const estado = estadoCalendarioAlo[albergue];
+    if (estado.range.length > 0) {
+      // Re-valida límite y colores
+      validarLimiteRangoAlo(albergue, estado.range);
+      mostrarInfoRangoAlo(albergue, estado.range); // Recolorea
+    }
+  });
+}
+
+// NUEVO: Función helper para validar límite (reutilizable)
+function validarLimiteRangoAlo(albergue, range) {
+  const select = document.getElementById('delegacion-alo-maestro');
+  const tipo = select.value;
+  if (!tipo) return; // No valida si no elegido
+  
+  const maxDias = tipo === 'escuelas' ? 4 : 3;
+  if (range.length > maxDias) {
+    alert(`Límite excedido para ${tipo === 'escuelas' ? 'Escuelas' : 'Otra Institución'}: hasta ${maxDias} días. El rango se ha reseteado.`);
+    resetRangoAlo(albergue);
+    return false;
+  }
+  return true;
 }

@@ -401,84 +401,81 @@
             <button class="close-modal" onclick="closeAlojamientoModal('maestro')">&times;</button>
         </div>
 
-        
         <div class="modal-body">
-    <!-- Campo cantidad ANTES del calendario (fuera del form para accesibilidad temprana) -->
-    <!-- <div class="cantidad-section">
-        <label for="cantidad-alo-maestro">Cantidad de Camas a Reservar:</label>
-        <input type="number" id="cantidad-alo-maestro" name="cantidad" min="1" required placeholder="máx 92">
-    </div> -->
-    
-    <!-- Resto replicando .disponibilidad-section del modal original -->
- 
-<div class="title">
-    <div class="form-row">
-        <label for="cantidad-alo-maestro">
-            <i class="fas fa-bed"></i>
-            Ingrese cantidad de camas a reservar:
-        </label>
-        <input type="number" id="cantidad-alo-maestro" name="cantidad" min="1" max="92" required placeholder="máx. 92">
-    </div>
-    <div class="form-row">
-        <label>
-            <i class="fas fa-calendar-alt"></i>
-            Seleccione el rango de días para realizar la reserva:
-        </label>
-    </div>
-
+            <div class="title">
+                <div class="form-row">
+                    <label for="cantidad-alo-maestro">
+                        <i class="fas fa-bed"></i>
+                        Ingrese cantidad de camas a reservar:
+                    </label>
+                    <input type="number" id="cantidad-alo-maestro" name="cantidad" min="1" max="92" required placeholder="máx. 92">
+                </div>
                 
-        
-        <!-- Calendario header (igual) -->
-        <div class="calendario-header">
-            <button class="nav-mes" onclick="cambiarMesAlo('maestro', -1)"><i class="fas fa-chevron-left"></i></button>
-            <span id="mes-actual-alo-maestro">Noviembre 2024</span>
-            <button class="nav-mes" onclick="cambiarMesAlo('maestro', 1)"><i class="fas fa-chevron-right"></i></button>
-        </div>
+                <!-- NUEVO: Campo Tipo de Delegación (después de cantidad) -->
+                <div class="form-row">
+                    <label for="delegacion-alo-maestro">
+                        <i class="fas fa-users"></i>
+                        Tipo de Delegación:
+                    </label>
+                    <select id="delegacion-alo-maestro" name="delegacion" required>
+                        <option value="">Seleccione tipo</option>
+                        <option value="escuelas">Escuelas (hasta 4 días)</option>
+                        <option value="otra">Otra Institución (hasta 3 días)</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <label>
+                        <i class="fas fa-calendar-alt"></i>
+                        Seleccione el rango de días para realizar la reserva:
+                    </label>
+                </div>
 
-                                
-        <div id="cal-loader-alo-maestro" class="cal-loader" hidden aria-busy="false"></div>
-        <div id="calendario-alo-maestro" class="calendario-grid"></div>
-         
-        
-    </div>
+                <!-- Calendario header (igual) -->
+                <div class="calendario-header">
+                    <button class="nav-mes" onclick="cambiarMesAlo('maestro', -1)"><i class="fas fa-chevron-left"></i></button>
+                    <span id="mes-actual-alo-maestro">Noviembre 2024</span>
+                    <button class="nav-mes" onclick="cambiarMesAlo('maestro', 1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
 
+                <div id="cal-loader-alo-maestro" class="cal-loader" hidden aria-busy="false"></div>
+                <div id="calendario-alo-maestro" class="calendario-grid"></div>
+            </div>
 
-     <!-- Texto de rango (debajo del calendario) -->
-    <div class="fecha-range-info" id="fecha-range-display-alo-maestro">
-    Seleccione un rango de hasta 4 días consecutivos. 
-    <span class="leyenda-color">
-        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
-    </span>
-    <span class="leyenda-color">
-        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
-    </span>
-</div>
-    
-    <!-- Formulario simplificado (solo institución y botón, abajo) -->
-    <form id="aloFormMaestro">
-        <div class="form-group">
+            <!-- Texto de rango (debajo del calendario, igual) -->
+            <div class="fecha-range-info" id="fecha-range-display-alo-maestro">
+                Seleccione un rango de hasta 4 días consecutivos. 
+                <span class="leyenda-color">
+                    <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
+                </span>
+                <span class="leyenda-color">
+                    <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
+                </span>
+            </div>
+            
+            <!-- Formulario simplificado (agrega hidden para delegacion) -->
+            <form id="aloFormMaestro">
+                <input type="hidden" id="delegacion-hidden-alo-maestro" name="delegacion" value=""> <!-- Para envío a GS -->
+                <div class="form-group">
                     <label for="institucion-maestro">Institución/Delegación</label>
                     <input type="text" id="institucion-alo-maestro" class="form-control" required>
-                  </div>
+                </div>
 
-                  <div class="form-group">
+                <div class="form-group">
                     <label for="responsable-maestro">Nombre Completo del Responsable</label>
                     <input type="text" id="responsable-alo-maestro" class="form-control" required>
-                  </div>
+                </div>
 
-                  <div class="form-group">
-                <label for="contacto-tinku">Contacto (Número Telefónico)</label>
-                <input type="tel" id="contacto-alo-maestro" class="form-control" required>
-              </div>
+                <div class="form-group">
+                    <label for="contacto-tinku">Contacto (Número Telefónico)</label>
+                    <input type="tel" id="contacto-alo-maestro" class="form-control" required>
+                </div>
 
-                
-
-        
-        <button type="submit" class="btn-submit">
-            <span class="btn-label">Confirmar Reserva</span>
-        </button>
-    </form>
-</div>
+                <button type="submit" class="btn-submit">
+                    <span class="btn-label">Confirmar Reserva</span>
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
