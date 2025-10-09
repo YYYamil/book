@@ -1584,3 +1584,12 @@
         margin: 5px 0;
     }
 }
+
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #ccc;
+}
+.btn-submit:not(:disabled) {
+  background-color: #4CAF50; /* Verde cuando habilitado */
+}

@@ -1215,6 +1215,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   setupCantidadLimitsAlo();
   setupDelegacionListenerAlo();
+  actualizarEstadoBotonAlo('maestro');
 });
 
 
@@ -1357,6 +1358,7 @@ function setupCantidadListenerAlo() {
       // Re-chequea y recolorea
       mostrarInfoRangoAlo(maestro, estado.range);
     }
+    actualizarEstadoBotonAlo(albergue);
   });
 }
 
@@ -1642,6 +1644,9 @@ async function mostrarInfoRangoAlo(albergue, range) {
   if (diasValidos.length < range.length) {
     showSnackbar(`Advertencia: ${range.length - diasValidos.length} días no tienen suficientes camas para ${cantidad} personas.`, 'error', 5000);
   }
+
+actualizarEstadoBotonAlo(albergue); // NUEVO: Habilita si todos verdes
+
 }
 
 async function mostrarInfoDiaAlo(albergue, iso) {
@@ -1896,6 +1901,8 @@ function setupDelegacionListenerAlo() {
       validarLimiteRangoAlo(albergue, estado.range);
       mostrarInfoRangoAlo(albergue, estado.range); // Recolorea
     }
+
+    actualizarEstadoBotonAlo('maestro'); // NUEVO: Actualiza botón
   });
 }
 
@@ -1913,3 +1920,31 @@ function validarLimiteRangoAlo(albergue, range) {
   }
   return true;
 }
+
+function actualizarEstadoBotonAlo(albergue) {
+  const btn = document.getElementById('btn-submit-alo-maestro');
+  if (!btn) return;
+  
+  const estado = estadoCalendarioAlo[albergue];
+  const cantidad = parseInt(document.getElementById('cantidad-alo-maestro').value, 10) || 0;
+  const delegacion = document.getElementById('delegacion-alo-maestro').value;
+  const institucion = document.getElementById('institucion-alo-maestro').value.trim();
+  const responsable = document.getElementById('responsable-alo-maestro').value.trim();
+  const contacto = document.getElementById('contacto-alo-maestro').value.trim();
+  
+  const todosVerdes = estado.range.length > 0 && estado.diasValidos.length === estado.range.length;
+  const camposCompletos = cantidad > 0 && delegacion && institucion && responsable && contacto;
+  
+  btn.disabled = !(todosVerdes && camposCompletos);
+  
+  // Opcional: Tooltip o texto en botón para feedback
+  if (btn.disabled) {
+    btn.title = todosVerdes ? 'Complete los campos del formulario' : 'Seleccione un rango con todos los días en verde';
+  } else {
+    btn.title = '';
+  }
+  
+  console.log(`Botón Alo ${albergue}: ${btn.disabled ? 'Deshabilitado' : 'Habilitado'} (verdes: ${estado.diasValidos.length}/${estado.range.length})`); // DEBUG
+}
+
+
