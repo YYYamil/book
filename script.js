@@ -1186,15 +1186,7 @@ function openAlojamientoModal(albergue) {
   resetCalendarAloToToday(albergue);
   resetOcupacionUIAlo(albergue); // Limpia barra
   fechasOcupadasAlo[albergue] = []; // Reset cache al abrir
-
- habilitarElementoAlo('delegacion-alo-maestro', false);
-  habilitarElementoAlo('calendario-alo-maestro', false);
-  document.getElementById('cantidad-alo-maestro').value = '';
-  document.getElementById('ayuda-cantidad-alo-maestro').textContent = 'Ingrese un número mayor a 0 para habilitar el tipo de delegación.';
-  document.getElementById('ayuda-delegacion-alo-maestro').textContent = 'Seleccione tipo para habilitar el calendario.';
-  actualizarEstadoBotonAlo(albergue); // Deshabilita botón
-  
-  generarCalendarioAlo(albergue); // Ahora genera con listeners condicionales
+  generarCalendarioAlo(albergue);
 }
 
 function closeAlojamientoModal(albergue) {
@@ -1223,14 +1215,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   setupCantidadLimitsAlo();
   setupDelegacionListenerAlo();
-  setupCantidadListenerAlo();
-
-  ['institucion-alo-maestro', 'responsable-alo-maestro', 'contacto-alo-maestro'].forEach(id => {
-    const input = document.getElementById(id);
-    if (input) input.addEventListener('blur', () => actualizarEstadoBotonAlo('maestro'));
-  });
-
-  actualizarEstadoBotonAlo('maestro');
 });
 
 
@@ -1360,32 +1344,20 @@ function resetFormAlo(albergue) {
   document.getElementById(`cantidad-alo-${albergue}`).value = ''; // Limpia cantidad arriba
   const estado = estadoCalendarioAlo[albergue];
   resetRangoAlo(albergue); // Usa reset extendido
-
-  habilitarElementoAlo('delegacion-alo-maestro', false);
-  habilitarElementoAlo('calendario-alo-maestro', false);
-
-  validarCantidadAlo();
-  
-  actualizarEstadoBotonAlo(albergue);
 }
 
+// Listener para cantidad: Re-valida rango si existe
 function setupCantidadListenerAlo() {
   const input = document.getElementById('cantidad-alo-maestro');
   if (!input) return;
-  
-  // Remueve listeners previos si existen (evita duplicates)
-  input.removeEventListener('input', validarCantidadAlo);
-  input.removeEventListener('blur', validarCantidadAloBlur);
-  
-  input.addEventListener('input', validarCantidadAlo);
-  
-  // FIX: Blur sin recursión – llama validación directa
-  function validarCantidadAloBlur() {
-    validarCantidadAlo();
+  input.addEventListener('input', () => {
     const cantidad = parseInt(input.value, 10) || 0;
-    if (cantidad < 1) input.value = '';
-  }
-  input.addEventListener('blur', validarCantidadAloBlur);
+    const estado = estadoCalendarioAlo.maestro;
+    if (estado.range.length > 0 && cantidad > 0) {
+      // Re-chequea y recolorea
+      mostrarInfoRangoAlo(maestro, estado.range);
+    }
+  });
 }
 
 // Helpers para botones (igual)
@@ -1457,7 +1429,7 @@ function generarCalendarioAlo(albergue) {
     }
     
     // Click handler (igual)
-    if (!esPasado && !estaOcupado && !document.getElementById('calendario-alo-maestro').classList.contains('calendario-disabled')) {
+    if (!esPasado && !estaOcupado) {
       dia.addEventListener('click', () => handleClickDiaAlo(albergue, iso, dia));
     } else {
       dia.tabIndex = -1;
@@ -1529,11 +1501,6 @@ function updateRangeDisplay(albergue, range) {
 }
 
 function handleClickDiaAlo(albergue, iso, cell) {
-
-  if (document.getElementById('calendario-alo-maestro').classList.contains('calendario-disabled')) {
-    return; // Bloquea clicks si disabled
-  }
-
   const estado = estadoCalendarioAlo[albergue];
   const [year, month, day] = iso.split('-').map(Number); // FIX: Parsea local
   const fechaClick = new Date(year, month - 1, day); // Local explícito
@@ -1675,9 +1642,6 @@ async function mostrarInfoRangoAlo(albergue, range) {
   if (diasValidos.length < range.length) {
     showSnackbar(`Advertencia: ${range.length - diasValidos.length} días no tienen suficientes camas para ${cantidad} personas.`, 'error', 5000);
   }
-
-actualizarEstadoBotonAlo(albergue); // NUEVO: Habilita si todos verdes
-
 }
 
 async function mostrarInfoDiaAlo(albergue, iso) {
@@ -1716,9 +1680,6 @@ function openAlojamientoModal(albergue) {
   resetCalendarAloToToday(albergue);
   resetOcupacionUIAlo(albergue); // Limpia barra
   fechasOcupadasAlo[albergue] = []; // Reset cache al abrir
-
-  validarCantidadAlo();
-
   generarCalendarioAlo(albergue);
 }
 
@@ -1920,46 +1881,23 @@ function updateRangeDisplay(albergue, range) {
   }
 }
 
-// Listener para delegación: Secuencial
 function setupDelegacionListenerAlo() {
   const select = document.getElementById('delegacion-alo-maestro');
   if (!select) return;
   
   select.addEventListener('change', () => {
-    const albergue = 'maestro';
+    const albergue = 'maestro'; // Fijo
     const hidden = document.getElementById('delegacion-hidden-alo-maestro');
-    if (hidden) hidden.value = select.value;
-    
-    const valor = select.value;
-    if (valor) {
-      // Secuencial: Habilita calendario
-      habilitarElementoAlo('calendario-alo-maestro', true);
-      document.getElementById('ayuda-delegacion-alo-maestro').textContent = 'Tipo seleccionado. Ahora seleccione el rango en el calendario.';
-    } else {
-      // Deshabilita si vacío
-      habilitarElementoAlo('calendario-alo-maestro', false);
-      document.getElementById('ayuda-delegacion-alo-maestro').textContent = 'Seleccione tipo para habilitar el calendario.';
-      resetRangoAlo(albergue); // Limpia rango
-    }
+    if (hidden) hidden.value = select.value; // Sincroniza para envío
     
     const estado = estadoCalendarioAlo[albergue];
     if (estado.range.length > 0) {
+      // Re-valida límite y colores
       validarLimiteRangoAlo(albergue, estado.range);
-      mostrarInfoRangoAlo(albergue, estado.range);
+      mostrarInfoRangoAlo(albergue, estado.range); // Recolorea
     }
-    actualizarEstadoBotonAlo(albergue);
-  });
-  
-  // FIX: Blur para validar al salir
-  select.addEventListener('blur', () => {
-    if (!select.value) {
-      habilitarElementoAlo('calendario-alo-maestro', false);
-      resetRangoAlo('maestro');
-    }
-    actualizarEstadoBotonAlo('maestro');
   });
 }
-
 
 // NUEVO: Función helper para validar límite (reutilizable)
 function validarLimiteRangoAlo(albergue, range) {
@@ -1975,95 +1913,3 @@ function validarLimiteRangoAlo(albergue, range) {
   }
   return true;
 }
-
-function actualizarEstadoBotonAlo(albergue) {
-  const btn = document.getElementById('btn-submit-alo-maestro');
-  if (!btn) return;
-  
-  const estado = estadoCalendarioAlo[albergue];
-  const cantidad = parseInt(document.getElementById('cantidad-alo-maestro').value, 10) || 0;
-  const delegacion = document.getElementById('delegacion-alo-maestro').value;
-  const institucion = document.getElementById('institucion-alo-maestro').value.trim();
-  const responsable = document.getElementById('responsable-alo-maestro').value.trim();
-  const contacto = document.getElementById('contacto-alo-maestro').value.trim();
-
-  const calendarioHabilitado = !document.getElementById('calendario-alo-maestro').classList.contains('calendario-disabled');
-  const camposCompletos = cantidad > 0 && delegacion && institucion && responsable && contacto && calendarioHabilitado; // Ya incluye
-  
-  const todosVerdes = estado.range.length > 0 && estado.diasValidos.length === estado.range.length;
-  
-  
-  btn.disabled = !(todosVerdes && camposCompletos);
-  
-  // Opcional: Tooltip o texto en botón para feedback
-  if (btn.disabled) {
-    btn.title = todosVerdes ? 'Complete los campos del formulario' : 'Seleccione un rango con todos los días en verde';
-  } else {
-    btn.title = '';
-  }
-  
-  console.log(`Botón Alo ${albergue}: ${btn.disabled ? 'Deshabilitado' : 'Habilitado'} (verdes: ${estado.diasValidos.length}/${estado.range.length})`); // DEBUG
-}
-
-
-function habilitarElementoAlo(selector, enabled) {
-  const el = typeof selector === 'string' ? document.getElementById(selector) : selector;
-  if (!el) return;
-  
-  if (enabled) {
-    el.disabled = false;
-    el.classList.remove('calendario-disabled', 'disabled');
-  } else {
-    el.disabled = true;
-    el.classList.add('calendario-disabled', 'disabled');
-  }
-  
-  // Para calendario: Bloquea nav buttons y grid
-  if (selector.includes('calendario')) {
-    const header = document.querySelector('.calendario-header');
-    const grid = document.getElementById('calendario-alo-maestro');
-    habilitarElementoAlo(header, enabled);
-    if (grid) grid.classList.toggle('calendario-disabled', !enabled);
-  }
-}
-
-
-function validarCantidadAlo() {
-  const input = document.getElementById('cantidad-alo-maestro');
-  if (!input) return;
-  
-  let cantidad = parseInt(input.value, 10) || 0;
-  if (cantidad < 1) {
-    cantidad = 0;
-    input.value = '';
-  } else if (cantidad > 92) {
-    cantidad = 92;
-    input.value = 92;
-  } else {
-    input.value = cantidad; // Limpia decimales
-  }
-  
-  const albergue = 'maestro';
-  
-  // Secuencial: Habilita delegación solo si cantidad >=1
-  const selectDeleg = document.getElementById('delegacion-alo-maestro');
-  if (cantidad >= 1) {
-    habilitarElementoAlo(selectDeleg, true);
-    document.getElementById('ayuda-cantidad-alo-maestro').textContent = 'Cantidad válida. Ahora seleccione tipo de delegación.';
-  } else {
-    habilitarElementoAlo(selectDeleg, false);
-    habilitarElementoAlo('calendario-alo-maestro', false);
-    document.getElementById('ayuda-cantidad-alo-maestro').textContent = 'Ingrese un número mayor a 0 para habilitar el tipo de delegación.';
-    resetRangoAlo(albergue);
-  }
-  
-  const estado = estadoCalendarioAlo[albergue];
-  if (estado.range.length > 0 && cantidad >= 1) {
-    mostrarInfoRangoAlo(albergue, estado.range);
-  }
-  actualizarEstadoBotonAlo(albergue);
-}
-
-
-
-
