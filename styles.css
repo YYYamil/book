@@ -1452,10 +1452,6 @@
   margin: 0;
 }
 
-/* Quitar flechas en Firefox */
-.no-spinners {
-  -moz-appearance: textfield;
-}
 
 /*///////////////////**/
 /* Colores para validación en rango */
@@ -1614,4 +1610,168 @@ select:disabled {
     background-color: #f5f5f5;
     cursor: not-allowed;
     opacity: 0.6;
+}
+
+
+/*Estilos para el control secuencial en el modal alojamiento*/
+
+/* Contenedores de pasos */
+.step-container {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+.step-container.step-completed {
+    border-color: #4caf50; /* Verde completado */
+    background-color: #f1f8e9;
+}
+.step-container.step-active {
+    border-color: #ff9800; /* Amarillo actual */
+    background-color: #fff3e0;
+}
+
+/* Indicador de progreso */
+.progress-steps {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+}
+.step-indicator {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #666;
+    margin: 0 10px;
+    transition: background 0.3s ease;
+}
+.step-indicator.completed {
+    background: #4caf50;
+    color: white;
+}
+.step-indicator.active {
+    background: #ff9800;
+    color: white;
+}
+.progress-bar {
+    flex: 1;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    margin: 0 15px;
+    position: relative;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, #4caf50, #8bc34a);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Botón Reset */
+.btn-reset {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+    font-size: 14px;
+}
+.btn-reset:hover {
+    background: #d32f2f;
+}
+
+/* Bloqueo visual para campos congelados */
+input[readonly], select[disabled] {
+    background-color: #f5f5f5;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/*Bloque de modal*/
+.step-container {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+.step-container.step-completed {
+    border-color: #4caf50;
+    background-color: #f1f8e9;
+}
+.step-container.step-active {
+    border-color: #ff9800;
+    background-color: #fff3e0;
+}
+.progress-steps {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.step-indicator {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #666;
+    margin: 0 10px;
+    transition: background 0.3s ease;
+}
+.step-indicator.completed {
+    background: #4caf50;
+    color: white;
+}
+.step-indicator.active {
+    background: #ff9800;
+    color: white;
+}
+.progress-bar {
+    flex: 1;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    margin: 0 15px;
+}
+.progress-fill {
+    height: 100%;
+    background: #4caf50;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+.btn-reset {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+.btn-reset:hover {
+    background: #d32f2f;
+}
+input[readonly], select[disabled] {
+    background-color: #f5f5f5;
+    color: #666;
+    cursor: not-allowed;
+}
+.calendario-grid.step-completed {
+    pointer-events: none;
+    opacity: 0.7;
 }

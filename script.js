@@ -868,6 +868,8 @@ function setupFieldGuards(){
 document.addEventListener('DOMContentLoaded', () => {
   // ... tus otras inicializaciones ...
   setupFieldGuards();
+
+
 });
 
 //Contro en los campos Cantidad de personsa-LIMITES por albergue
@@ -1087,6 +1089,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.getElementById('close-cancel-modal');
   const cancelForm = document.getElementById('cancelForm');
 
+const btnAlo = document.querySelector('.btn-alo');
+if (btnAlo) {
+  btnAlo.addEventListener('click', function() {
+    const albergue = this.dataset.albergue || 'maestro'; // Usa data o fallback
+    openAlojamientoModal(albergue);
+  });
+}
+
+
   if (openBtn)  openBtn.addEventListener('click', openCancelModal);
   if (closeBtn) closeBtn.addEventListener('click', closeCancelModal);
 
@@ -1159,14 +1170,16 @@ document.getElementById("cancel-id").addEventListener("input", function() {
 });
 
 
-///////////////////////////////////////////////////////////////////2da parte:
 
-
+/*II parte*/
 
 // Estado para calendario de alojamiento (solo maestro por ahora)
 const estadoCalendarioAlo = {
   maestro: { mes: new Date().getMonth(), año: new Date().getFullYear(), startISO: null, endISO: null, range: [], diasValidos: [] }
 };
+
+// Estado global para pasos (por albergue)
+const pasoEstadoAlo = { maestro: { current: 1, completed: [] } };
 
 // Cache para fechas ocupadas en alojamiento (se actualizará desde GS, similar)
 let fechasOcupadasAlo = { maestro: [] };
@@ -1179,21 +1192,50 @@ const formSubmissionStateAlo = { maestro: { isSubmitting: false } };
 
 // Funciones para modales de alojamiento
 function openAlojamientoModal(albergue) {
-  console.log(`Abriendo modal de alojamiento para ${albergue}`);
-  document.getElementById(`modal-alojamiento-${albergue}`).classList.add('active');
+  console.log(`Abriendo modal de alojamiento para ${albergue}`); // DEBUG: Confirm albergue value
+  const modalId = `modal-alojamiento-${albergue}`;
+  const modalEl = document.getElementById(modalId);
+  console.log(`Looking for modal ID: ${modalId}, found:`, modalEl); // DEBUG: Check if element exists
+  
+  if (!modalEl) {
+    console.error(`Modal element '${modalId}' not found in DOM. Check HTML ID.`);
+    alert(`Error: Modal para ${albergue} no encontrado. Recarga la página.`);
+    return; // Exit early to prevent crash
+  }
+  
+  modalEl.classList.add('active');
   document.body.style.overflow = 'hidden';
   resetFormAlo(albergue);
   resetCalendarAloToToday(albergue);
   resetOcupacionUIAlo(albergue); // Limpia barra
   fechasOcupadasAlo[albergue] = []; // Reset cache al abrir
   generarCalendarioAlo(albergue);
+
+  // Always init steps - con try-catch mínimo para no romper el modal
+  try {
+    initPasoFlujoAlo(albergue);
+    setupPasoListenersAlo(albergue);
+    console.log('Pasos inicializados exitosamente para', albergue); // DEBUG éxito en pasos
+  } catch (error) {
+    console.error('Error en inits de pasos:', error);
+    // No revertir el modal: solo log y continúa (pasos opcionales por ahora)
+  }
+}
+
+// Inicializar pasos
+function initPasoFlujoAlo(albergue) {
+  pasoEstadoAlo[albergue] = { current: 1, completed: [] };
+  updateProgresoAlo(albergue);
+  // Deshabilita submit inicialmente
+  const btnSubmit = document.getElementById('btn-submit-alo-maestro');
+  if (btnSubmit) btnSubmit.disabled = true;
 }
 
 function closeAlojamientoModal(albergue) {
   console.log(`Cerrando modal de alojamiento para ${albergue}`);
   document.getElementById(`modal-alojamiento-${albergue}`).classList.remove('active');
   document.body.style.overflow = 'auto';
-  resetFormAlo(albergue);
+  resetAllAlo(albergue); // Limpia al cerrar
 }
 
 // Cerrar al click fuera (igual)
@@ -1215,15 +1257,17 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   setupCantidadLimitsAlo();
   setupDelegacionListenerAlo();
+  setupCantidadListenerAlo(); // Asegura que se llame
 });
-
-
-
 
 function handleFormSubmitAlo(e) {
   e.preventDefault();
   const albergue = 'maestro'; // Fijo por ahora
   if (formSubmissionStateAlo[albergue].isSubmitting) return;
+  if (pasoEstadoAlo[albergue].completed.length < 4) {
+    showSnackbar('Complete todos los pasos antes de confirmar.', 'error', 3000);
+    return;
+  }
   formSubmissionStateAlo[albergue].isSubmitting = true;
   submitFormAlo(albergue).finally(() => {
     formSubmissionStateAlo[albergue].isSubmitting = false;
@@ -1301,7 +1345,7 @@ function getFormDataAlo(albergue) {
   const estado = estadoCalendarioAlo[albergue];
   const cantidad = parseInt(document.getElementById(`cantidad-alo-${albergue}`).value, 10) || 0;
 
-      const delegacion = document.getElementById('delegacion-alo-maestro').value;
+  const delegacion = document.getElementById('delegacion-alo-maestro').value;
   if (!delegacion) {
     alert('Seleccione tipo de delegación');
     return null;
@@ -1321,8 +1365,6 @@ function mostrarConfirmacionAlo(albergue, formData, idReserva) {
   // Opcional: alert similar al existente, pero con rango
 }
 
-
-
 async function mostrarInfoDiaAlo(albergue, iso) {
   showCalendarLoadingAlo(albergue);
   try {
@@ -1338,6 +1380,7 @@ async function mostrarInfoDiaAlo(albergue, iso) {
     hideCalendarLoadingAlo(albergue);
   }
 }
+
 function resetFormAlo(albergue) {
   const form = document.getElementById('aloFormMaestro');
   if (form) form.reset();
@@ -1459,45 +1502,47 @@ function crearDiaElementoAlo(numero, claseExtra = '') {
   dia.textContent = numero;
   return dia;
 }
+
 function updateCalendarHighlightsAlo(albergue) {
   generarCalendarioAlo(albergue);
 }
 
-
 function updateRangeDisplay(albergue, range) {
   const display = document.getElementById(`fecha-range-display-alo-${albergue}`);
-//   if (display) {
-//     if (range.length === 0) {
-//       display.innerHTML = `
-        
-//         <span class="leyenda-color">
-//           <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
-//         </span>
-//         <span class="leyenda-color">
-//           <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
-//         </span>
-//       `;
-//     } else {
-//       const estado = estadoCalendarioAlo[albergue];
-//       const invalidos = range.length - estado.diasValidos.length;
-//       let extra = '';
-//       if (invalidos > 0) {
-//         extra = ` <span style="color: #f44336;">(¡${invalidos} días en rojo: insuficientes camas!)</span>`;
-//       }
-      
-//       // SIMPLIFICADO: Solo muestra conteo de días + warning, sin fechas específicas (evita desfase)
-//       display.innerHTML = `
-//         ${range.length} días seleccionados${extra}.
-//         <span class="leyenda-color">
-//           <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
-//         </span>
-//         <span class="leyenda-color">
-//           <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
-//         </span>
-//       `;
-//     }
-//   }
-   console.log(`Display actualizado: rango length=${range.length}`); // DEBUG (remueve si no necesitas)
+  if (!display) return;
+  
+  if (range.length === 0) {
+    display.innerHTML = `
+      Estadia de hasta 4 días y 3 noches consecutivos.
+      <br>
+      <span class="leyenda-color">
+        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
+      </span>
+      <span class="leyenda-color">
+        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles.
+      </span>
+    `;
+  } else {
+    const start = new Date(range[0]);
+    const end = new Date(range[range.length - 1]);
+    const estado = estadoCalendarioAlo[albergue];
+    const invalidos = range.length - estado.diasValidos.length;
+    let extra = '';
+    // if (invalidos > 0) {
+    //   extra = ` <span style="color: #f44336;">(¡${invalidos} días en rojo: insuficientes camas!)</span>`;
+    // }
+    display.innerHTML = `
+       Su seleccion es: ${range.length} días${extra} y ${range.length - 1} ${extra} noches.
+       <br>
+      <span class="leyenda-color">
+        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
+      </span>
+      <br>
+      <span class="leyenda-color">
+        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles.
+      </span>
+    `;
+  }
 }
 
 function handleClickDiaAlo(albergue, iso, cell) {
@@ -1540,16 +1585,14 @@ function handleClickDiaAlo(albergue, iso, cell) {
       alert("El rango no puede exceder 4 días consecutivos");
       return;
     } else {
-
-
-        // NUEVO: Antes de set end, chequea límite por tipo
-  const select = document.getElementById('delegacion-alo-maestro');
-  const tipo = select.value;
-  const maxDias = tipo === 'escuelas' ? 4 : (tipo === 'otra' ? 3 : 4); // Default 4
-  if (diffDias + 1 > maxDias) { // +1 porque diff es días intermedios
-    alert(`Límite excedido según tipo de delegación (${tipo || 'no seleccionado'}): hasta ${maxDias} días.`);
-    return;
-    }
+      // NUEVO: Antes de set end, chequea límite por tipo
+      const select = document.getElementById('delegacion-alo-maestro');
+      const tipo = select.value;
+      const maxDias = tipo === 'escuelas' ? 4 : (tipo === 'otra' ? 3 : 4); // Default 4
+      if (diffDias + 1 > maxDias) { // +1 porque diff es días intermedios
+        alert(`Límite excedido según tipo de delegación (${tipo || 'no seleccionado'}): hasta ${maxDias} días.`);
+        return;
+      }
 
       // Set end y llena rango (loop igual, ya funciona)
       estado.endISO = iso;
@@ -1569,6 +1612,18 @@ function handleClickDiaAlo(albergue, iso, cell) {
       updateCalendarHighlightsAlo(albergue);
       updateRangeDisplay(albergue, estado.range);
       mostrarInfoRangoAlo(albergue, estado.range);
+
+      // Completa paso 3 si válido
+      if (validarLimiteRangoAlo(albergue, estado.range)) {
+        // Bloquea clics futuros en calendario
+        const grid = document.getElementById(`calendario-alo-${albergue}`);
+        if (grid) grid.classList.add('step-completed');
+        const navPrev = document.getElementById(`nav-prev-alo-${albergue}`);
+        const navNext = document.getElementById(`nav-next-alo-${albergue}`);
+        if (navPrev) navPrev.disabled = true;
+        if (navNext) navNext.disabled = true;
+        completePasoAlo(albergue, 3); // Completa paso
+      }
     }
   } else {
     // Reinicia
@@ -1578,9 +1633,6 @@ function handleClickDiaAlo(albergue, iso, cell) {
   }
 }
 
-
-
-
 function resetRangoAlo(albergue) {
   const estado = estadoCalendarioAlo[albergue];
   estado.startISO = null;
@@ -1588,11 +1640,8 @@ function resetRangoAlo(albergue) {
   estado.range = [];
   estado.diasValidos = []; // Nuevo: Limpia validación
   updateRangeDisplay(albergue, []);
-  updateCalendarHighlightsAlo(albergue);
+  updateCalendarHighlightsAlo(albergue); // Regenera sin highlights
 }
-
-
-
 
 // En mostrarInfoRangoAlo: Setea diasValidos basado en disp >= cantidad
 async function mostrarInfoRangoAlo(albergue, range) {
@@ -1600,10 +1649,9 @@ async function mostrarInfoRangoAlo(albergue, range) {
   const cantidad = parseInt(document.getElementById(`cantidad-alo-${albergue}`).value, 10) || 0;
   if (cantidad === 0) return; // No valida si cantidad no ingresada
   
-    if (!validarLimiteRangoAlo(albergue, range)) {
+  if (!validarLimiteRangoAlo(albergue, range)) {
     return; // Sale si excede (ya alertado y reseteado)
   }
-
 
   let minDisp = cap;
   const diasValidos = [];
@@ -1644,43 +1692,155 @@ async function mostrarInfoRangoAlo(albergue, range) {
   }
 }
 
-async function mostrarInfoDiaAlo(albergue, iso) {
-  showCalendarLoadingAlo(albergue);
-  try {
-    const disp = await obtenerDisponibilidadDiaAlo(albergue, iso); // FIX: Usa Alo
-    const cap = capacidades[albergue];
-    const ocupados = cap - (disp.disponibles || cap);
-    updateOcupacionUIAlo(albergue, ocupados, cap);
-    const spanDisp = document.getElementById(`disponibles-alo-${albergue}`);
-    if (spanDisp) spanDisp.textContent = disp.disponibles || cap;
-  } catch (e) {
-    console.warn(`Error en info día Alo ${iso}:`, e);
-  } finally {
-    hideCalendarLoadingAlo(albergue);
+// Listeners para avance de pasos
+function setupPasoListenersAlo(albergue) {
+  // Paso 1: Cantidad (fix: agrega log y fuerza closest)
+  const qtyInput = document.getElementById('cantidad-alo-maestro');
+  if (qtyInput) {
+    qtyInput.addEventListener('blur', () => {
+      console.log('Blur en cantidad:', qtyInput.value); // DEBUG: Ver si triggers
+      if (qtyInput.value && parseInt(qtyInput.value) >= 1) {
+        qtyInput.readonly = true; // Congela
+        const step1 = qtyInput.closest('.step-container'); // Busca el wrapper
+        if (step1) {
+          step1.classList.add('step-completed');
+          console.log('Paso 1 completado: cantidad bloqueada'); // DEBUG
+        } else {
+          console.warn('No se encontró .step-container para paso 1'); // DEBUG si falla
+        }
+        completePasoAlo(albergue, 1);
+        // Trigger: Recalcula si rango existe
+        const estado = estadoCalendarioAlo[albergue];
+        if (estado.range.length > 0) {
+          mostrarInfoRangoAlo(albergue, estado.range);
+        }
+      }
+    });
+  } else {
+    console.warn('Input cantidad no encontrado'); // DEBUG
+  }
+
+  // Paso 2: Delegación (ya funciona)
+  const delSelect = document.getElementById('delegacion-alo-maestro');
+  if (delSelect) {
+    delSelect.addEventListener('change', () => {
+      if (delSelect.value) {
+        delSelect.disabled = true; // Congela
+        const step2 = delSelect.closest('.step-container');
+        if (step2) step2.classList.add('step-completed');
+        completePasoAlo(albergue, 2);
+        document.getElementById('delegacion-hidden-alo-maestro').value = delSelect.value;
+        // Trigger: Revalida si rango existe
+        const estado = estadoCalendarioAlo[albergue];
+        if (estado.range.length > 0) {
+          validarLimiteRangoAlo(albergue, estado.range);
+          mostrarInfoRangoAlo(albergue, estado.range);
+        }
+      }
+    });
+  }
+
+  // Paso 3: Ya se maneja en handleClickDiaAlo
+
+  // Paso 4: Campos adicionales
+  ['institucion-alo-maestro', 'responsable-alo-maestro', 'contacto-alo-maestro'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) {
+      input.addEventListener('blur', () => {
+        if (input.value.trim()) {
+          completePasoAlo(albergue, 4);
+        }
+      });
+    }
+  });
+}
+
+// Función para completar un paso
+function completePasoAlo(albergue, pasoNum) {
+  if (!pasoEstadoAlo[albergue].completed.includes(pasoNum)) {
+    pasoEstadoAlo[albergue].completed.push(pasoNum);
+    pasoEstadoAlo[albergue].current = Math.min(4, pasoNum + 1);
+    updateProgresoAlo(albergue);
+  }
+  // Habilita submit si todos completos
+  if (pasoEstadoAlo[albergue].completed.length === 4) {
+    const btnSubmit = document.getElementById('btn-submit-alo-maestro');
+    if (btnSubmit) btnSubmit.disabled = false;
   }
 }
 
+// Actualizar progreso visual
+function updateProgresoAlo(albergue) {
+  // Highlights en steps
+  document.querySelectorAll('.step-container').forEach((step, index) => {
+    const pasoNum = index + 1;
+    if (pasoEstadoAlo[albergue].completed.includes(pasoNum)) {
+      step.classList.add('step-completed');
+    } else if (pasoEstadoAlo[albergue].current === pasoNum) {
+      step.classList.add('step-active');
+    } else {
+      step.classList.remove('step-completed', 'step-active');
+    }
+  });
 
-// En resetRangoAlo: limpiar highlights
-function resetRangoAlo(albergue) {
-  const estado = estadoCalendarioAlo[albergue];
-  estado.startISO = null;
-  estado.endISO = null;
-  estado.range = [];
-  updateRangeDisplay(albergue, []);
-  updateCalendarHighlightsAlo(albergue); // Regenera sin highlights
+  // Indicadores circulares
+  document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
+    const pasoNum = index + 1;
+    indicator.classList.remove('completed', 'active');
+    if (pasoEstadoAlo[albergue].completed.includes(pasoNum)) {
+      indicator.classList.add('completed');
+    } else if (pasoEstadoAlo[albergue].current === pasoNum) {
+      indicator.classList.add('active');
+    }
+  });
+
+  // Barra de progreso
+  const progress = (pasoEstadoAlo[albergue].completed.length / 4) * 100;
+  const fill = document.getElementById('progress-fill');
+  if (fill) fill.style.width = `${progress}%`;
 }
 
-// En openAlojamientoModal: reset ocupacion y cache si necesario
-function openAlojamientoModal(albergue) {
-  console.log(`Abriendo modal de alojamiento para ${albergue}`);
-  document.getElementById(`modal-alojamiento-${albergue}`).classList.add('active');
-  document.body.style.overflow = 'hidden';
-  resetFormAlo(albergue);
-  resetCalendarAloToToday(albergue);
-  resetOcupacionUIAlo(albergue); // Limpia barra
-  fechasOcupadasAlo[albergue] = []; // Reset cache al abrir
+// Función Reset Global
+function resetAllAlo(albergue) {
+  console.log('Reset all para', albergue); // DEBUG
+  // Reset inputs y select
+  const qtyInput = document.getElementById('cantidad-alo-maestro');
+  if (qtyInput) {
+    qtyInput.value = '';
+    qtyInput.readonly = false; // Desbloquea
+  }
+  const delSelect = document.getElementById('delegacion-alo-maestro');
+  if (delSelect) {
+    delSelect.value = '';
+    delSelect.disabled = false; // Desbloquea
+  }
+  document.getElementById('delegacion-hidden-alo-maestro').value = '';
+  ['institucion-alo-maestro', 'responsable-alo-maestro', 'contacto-alo-maestro'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.value = '';
+  });
+
+  // Reset form
+  const form = document.getElementById('aloFormMaestro');
+  if (form) form.reset();
+
+  // Reset calendario
+  resetRangoAlo(albergue);
+  fechasOcupadasAlo[albergue] = [];
   generarCalendarioAlo(albergue);
+  const grid = document.getElementById(`calendario-alo-${albergue}`);
+  if (grid) grid.classList.remove('step-completed');
+  const navPrev = document.getElementById(`nav-prev-alo-${albergue}`);
+  const navNext = document.getElementById(`nav-next-alo-${albergue}`);
+  if (navPrev) navPrev.disabled = false;
+  if (navNext) navNext.disabled = false;
+
+  // Reset pasos y visual
+  initPasoFlujoAlo(albergue);
+  const btnSubmit = document.getElementById('btn-submit-alo-maestro');
+  if (btnSubmit) btnSubmit.disabled = true;
+
+  showSnackbar('Todos los campos han sido limpiados. Puede comenzar de nuevo.', 'success', 3000);
 }
 
 function cambiarMesAlo(albergue, direccion) {
@@ -1841,46 +2001,6 @@ function lockFechaInputsAlo() {
   // No aplica por ahora, pero placeholder para expansión
 }
 
-/*para el recuadro de colores en el dia del rango*/
-
-function updateRangeDisplay(albergue, range) {
-  const display = document.getElementById(`fecha-range-display-alo-${albergue}`);
-  if (!display) return;
-  
-  if (range.length === 0) {
-    display.innerHTML = `
-      Estadia de hasta 4 días y 3 noches consecutivos.
-      <br>
-      <span class="leyenda-color">
-        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
-      </span>
-      <span class="leyenda-color">
-        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles.
-      </span>
-    `;
-  } else {
-    const start = new Date(range[0]);
-    const end = new Date(range[range.length - 1]);
-    const estado = estadoCalendarioAlo[albergue];
-    const invalidos = range.length - estado.diasValidos.length;
-    let extra = '';
-    // if (invalidos > 0) {
-    //   extra = ` <span style="color: #f44336;">(¡${invalidos} días en rojo: insuficientes camas!)</span>`;
-    // }
-    display.innerHTML = `
-       Su seleccion es: ${range.length} días${extra} y ${range.length - 1} ${extra} noches.
-       <br>
-      <span class="leyenda-color">
-        <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles.
-      </span>
-      <br>
-      <span class="leyenda-color">
-        <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles.
-      </span>
-    `;
-  }
-}
-
 function setupDelegacionListenerAlo() {
   const select = document.getElementById('delegacion-alo-maestro');
   if (!select) return;
@@ -1903,7 +2023,7 @@ function setupDelegacionListenerAlo() {
 function validarLimiteRangoAlo(albergue, range) {
   const select = document.getElementById('delegacion-alo-maestro');
   const tipo = select.value;
-  if (!tipo) return; // No valida si no elegido
+  if (!tipo) return true; // No valida si no elegido
   
   const maxDias = tipo === 'escuelas' ? 4 : 3;
   if (range.length > maxDias) {
