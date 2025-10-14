@@ -445,27 +445,38 @@
                 </div>
             </div>
 
-            <!-- Paso 3: Rango de Días -->
-            <div class="step-container step-3">
-                <div class="form-row">
-                    <label>
-                        <i class="fas fa-calendar-alt"></i>
-                        3. Seleccione el rango de días para realizar la reserva:
-                    </label>
-                </div>
-                <!-- Calendario header -->
-                <div class="calendario-header">
-                    <button class="nav-mes" id="nav-prev-alo-maestro" onclick="cambiarMesAlo('maestro', -1)"><i class="fas fa-chevron-left"></i></button>
-                    <span id="mes-actual-alo-maestro">Noviembre 2024</span>
-                    <button class="nav-mes" id="nav-next-alo-maestro" onclick="cambiarMesAlo('maestro', 1)"><i class="fas fa-chevron-right"></i></button>
-                </div>
-                <div id="cal-loader-alo-maestro" class="cal-loader" hidden aria-busy="false"></div>
-                <div id="calendario-alo-maestro" class="calendario-grid"></div>
-            </div>
+     <!-- Nuevo: Horarios resaltados -->
+<div class="horarios-resaltados">
+  <span>Recuerde: </span>
+  <i class="fas fa-clock" style="color: #2196F3;"></i>
+  <span>Hora Ingreso: 09:00 hs</span>
+  <i class="fas fa-clock" style="color: #2196F3;"></i>
+  <span>Hora Salida: 18:30 hs</span>
+</div>
 
+            <!-- Paso 3: Rango de Días -->
+            <!-- Calendario header -->
+<div class="calendario-header">
+    <button class="nav-mes" id="nav-prev-alo-maestro" onclick="cambiarMesAlo('maestro', -1)"><i class="fas fa-chevron-left"></i></button>
+    <span id="mes-actual-alo-maestro">Noviembre 2024</span>
+    <button class="nav-mes" id="nav-next-alo-maestro" onclick="cambiarMesAlo('maestro', 1)"><i class="fas fa-chevron-right"></i></button>
+</div>
+
+<!-- Loader único (con texto "Buscando...") -->
+<div id="cal-loader-alo-maestro" class="cal-loader" hidden aria-busy="false">
+    <div class="spinner" role="status" aria-label="Cargando disponibilidad"></div>
+    <span id="loader-text-alo-maestro" class="loader-text">Buscando...</span>
+</div>
+
+<!-- Div del calendario (DESCOMENTADO: aquí se generan los días) -->
+
+
+<div id="calendario-alo-maestro" class="calendario-grid"></div>
             <!-- Info de Rango (debajo del calendario) -->
             <div class="fecha-range-info step-3" id="fecha-range-display-alo-maestro">
                 Seleccione un rango de hasta 4 días consecutivos. 
+
+                
                 <span class="leyenda-color">
                     <span class="cuadrado rojo">■</span> <span class="texto-rojo">Rojo:</span> Día sin camas disponibles para la cantidad solicitada.
                 </span>
@@ -473,6 +484,8 @@
                     <span class="cuadrado verde">■</span> <span class="texto-verde">Verde:</span> Día con camas disponibles para la cantidad solicitada.
                 </span>
             </div>
+
+            
 
             <!-- Paso 4: Datos Adicionales -->
             <div class="step-container step-4">
@@ -490,6 +503,8 @@
                         <label for="contacto-alo-maestro">Contacto (Número Telefónico)</label>
                         <input type="tel" id="contacto-alo-maestro" class="form-control" required>
                     </div>
+
+                   
 
  <!-- Botón Submit (deshabilitado inicialmente) -->
             <button type="submit" form="aloFormMaestro" class="btn-submit" id="btn-submit-alo-maestro" disabled>
