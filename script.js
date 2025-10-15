@@ -2,7 +2,7 @@
 const CONFIG = {
   secretKey: "cristiano1988",
   googleScriptUrl: "https://script.google.com/macros/s/AKfycbwUo0ouoBIxBhYl89tEy1NartJHSg-HIknuwN4Vc0YRnb601c5BDrq9-CHLNIEG1Y_L/exec",
-  googleScriptUrlAlo: "https://script.google.com/macros/s/AKfycbxUe5KtZLqPH8OKJl3o3iM46Mz8gur6yyOuMMymyJxwfL-m8Ot-2bq8QaqUH9qwMFxV/exec",
+  googleScriptUrlAlo: "https://script.google.com/macros/s/AKfycbxvskDSMkR5mqtGoqal4Tfuls001kyAlSu9QVE3Q9hORer0s3-aNCyjmPgAotk1wAQb/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
   diasSemanaCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -1238,7 +1238,12 @@ function initPasoFlujoAlo(albergue) {
   updateProgresoAlo(albergue);
   // Deshabilita submit inicialmente
   const btnSubmit = document.getElementById('btn-submit-alo-maestro');
-  if (btnSubmit) btnSubmit.disabled = true;
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.setAttribute('disabled', 'disabled');
+    btnSubmit.classList.add('disabled');
+    btnSubmit.classList.remove('enabled');
+  }
 }
 
 function closeAlojamientoModal(albergue) {
@@ -1270,10 +1275,12 @@ document.addEventListener('DOMContentLoaded', function() {
   setupCantidadListenerAlo(); // Asegura que se llame
 });
 
+// En handleFormSubmitAlo: Refuerza check para prevenir submit si Paso 4 no completo
 function handleFormSubmitAlo(e) {
   e.preventDefault();
   const albergue = 'maestro'; // Fijo por ahora
   if (formSubmissionStateAlo[albergue].isSubmitting) return;
+  // NUEVO: Check explícito para todos los pasos completos (incluyendo Paso 4)
   if (pasoEstadoAlo[albergue].completed.length < 4) {
     showSnackbar('Complete todos los pasos antes de confirmar.', 'error', 3000);
     return;
@@ -1283,6 +1290,50 @@ function handleFormSubmitAlo(e) {
     formSubmissionStateAlo[albergue].isSubmitting = false;
   });
 }
+
+// En completePasoAlo: Toggle clases visuales al habilitar
+function completePasoAlo(albergue, pasoNum) {
+  if (!pasoEstadoAlo[albergue].completed.includes(pasoNum)) {
+    pasoEstadoAlo[albergue].completed.push(pasoNum);
+    pasoEstadoAlo[albergue].current = Math.min(4, pasoNum + 1);
+    updateProgresoAlo(albergue);
+  }
+  // Habilita submit SOLO si todos completos (4 pasos, Paso 4 incluido)
+  if (pasoEstadoAlo[albergue].completed.length === 4) {
+    const btnSubmit = document.getElementById('btn-submit-alo-maestro');
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.classList.remove('disabled'); // Remueve gris/prohibido
+      btnSubmit.classList.add('enabled'); // Agrega azul/activo
+      console.log('Botón submit habilitado: Paso 4 completo'); // DEBUG
+    }
+  }
+}
+
+// En setupPasoListenersAlo: Deshabilita visual si no todos llenos (Paso 4)
+['institucion-alo-maestro', 'responsable-alo-maestro', 'dni-alo-maestro', 'contacto-alo-maestro'].forEach(id => {
+  const input = document.getElementById(id);
+  if (input) {
+    input.addEventListener('blur', () => {
+      // Completa Paso 4 solo si TODOS los campos tienen valor
+      const todosLlenos = ['institucion-alo-maestro', 'responsable-alo-maestro', 'dni-alo-maestro', 'contacto-alo-maestro'].every(idCheck => {
+        const el = document.getElementById(idCheck);
+        return el && el.value.trim();
+      });
+      const btnSubmit = document.getElementById('btn-submit-alo-maestro');
+      if (todosLlenos) {
+        completePasoAlo(albergue, 4);
+        console.log('Paso 4 completado: Todos los campos llenos'); // DEBUG
+      } else if (btnSubmit) {
+        // Deshabilita visual si no todos llenos
+        btnSubmit.disabled = true;
+        btnSubmit.classList.add('disabled');
+        btnSubmit.classList.remove('enabled');
+        console.log('Botón submit deshabilitado: Falta campo en Paso 4'); // DEBUG
+      }
+    });
+  }
+});
 
 async function submitFormAlo(albergue) {
   const formData = getFormDataAlo(albergue);
@@ -1333,6 +1384,7 @@ async function submitFormAlo(albergue) {
     setTimeout(() => resetBtn(btn), 1200);
   }
 }
+
 function getFormDataAlo(albergue) {
   if (!estadoCalendarioAlo || !estadoCalendarioAlo[albergue]) {
     console.error(`Estado Alo no definido para ${albergue}`);
@@ -1350,6 +1402,8 @@ function getFormDataAlo(albergue) {
   return {
     albergue,
     institucion: document.getElementById(`institucion-alo-${albergue}`).value.trim(),
+    responsable: document.getElementById(`responsable-alo-${albergue}`).value.trim(), // NUEVO: Responsable
+    dni: document.getElementById('dni-alo-maestro').value.trim(), // NUEVO: DNI
     cantidad,
     range: estado.range // Array correcto para BD
     //delegacion
@@ -1542,6 +1596,7 @@ function updateRangeDisplay(albergue, range) {
   }
 }
 
+// En handleClickDiaAlo: Completa paso 3 solo si todos los días son verdes (disponibles)
 async function handleClickDiaAlo(albergue, iso, cell) {
   const estado = estadoCalendarioAlo[albergue];
   const [year, month, day] = iso.split('-').map(Number); // FIX: Parsea local
@@ -1612,8 +1667,9 @@ async function handleClickDiaAlo(albergue, iso, cell) {
       // UNA SOLA BÚSQUEDA: Solo aquí, después del segundo click (rango completo)
       try {
         await mostrarInfoRangoAlo(albergue, estado.range);
-        // Ahora aplica deshabilitado después de colorear (post-backend)
-        if (validarLimiteRangoAlo(albergue, estado.range)) {
+        // OPTIMIZACIÓN: Completa paso 3 SOLO si todos los días son verdes (diasValidos.length === range.length)
+        const todosVerdes = estado.diasValidos.length === estado.range.length;
+        if (todosVerdes && validarLimiteRangoAlo(albergue, estado.range)) {
           // Bloquea clics futuros en calendario
           const grid = document.getElementById(`calendario-alo-${albergue}`);
           if (grid) grid.classList.add('step-completed');
@@ -1621,7 +1677,11 @@ async function handleClickDiaAlo(albergue, iso, cell) {
           const navNext = document.getElementById(`nav-next-alo-${albergue}`);
           if (navPrev) navPrev.disabled = true;
           if (navNext) navNext.disabled = true;
-          completePasoAlo(albergue, 3); // Completa paso
+          completePasoAlo(albergue, 3); // Completa paso → Activa paso 4
+          console.log('Paso 3 completado: Todos los días verdes'); // DEBUG
+        } else if (!todosVerdes) {
+          console.log('Paso 3 no completado: Algunos días rojos (insuficientes camas)'); // DEBUG
+          showSnackbar('Algunos días no tienen suficientes camas. Revise colores rojos.', 'error', 4000);
         }
       } catch (error) {
         console.error('Error al verificar rango:', error);
@@ -1635,6 +1695,8 @@ async function handleClickDiaAlo(albergue, iso, cell) {
     handleClickDiaAlo(albergue, iso, cell);
   }
 }
+
+
 function resetRangoAlo(albergue) {
   const estado = estadoCalendarioAlo[albergue];
   estado.startISO = null;
@@ -1716,41 +1778,30 @@ function setupPasoListenersAlo(albergue) {
   const qtyInput = document.getElementById('cantidad-alo-maestro');
   if (qtyInput) {
     qtyInput.addEventListener('blur', () => {
-      console.log('Blur en cantidad:', qtyInput.value); // DEBUG: Ver si triggers
+      console.log('Blur en cantidad:', qtyInput.value); // DEBUG
       const valor = parseInt(qtyInput.value, 10);
       if (valor && valor >= 1) {
-        qtyInput.readonly = true; // Bloquea edición
-        qtyInput.value = valor; // Fija el valor (por si hay cambios parciales)
+        qtyInput.readonly = true;
+        qtyInput.value = valor;
         const step1 = qtyInput.closest('.step-container');
-        if (step1) {
-          step1.classList.add('step-completed');
-          console.log('Paso 1 completado: cantidad bloqueada en', valor); // DEBUG
-        } else {
-          console.warn('No se encontró .step-container para paso 1'); // DEBUG si falla
-        }
+        if (step1) step1.classList.add('step-completed');
         completePasoAlo(albergue, 1);
-        // Trigger: Recalcula si rango existe
         const estado = estadoCalendarioAlo[albergue];
-        if (estado.range.length > 0) {
-          mostrarInfoRangoAlo(albergue, estado.range);
-        }
+        if (estado.range.length > 0) mostrarInfoRangoAlo(albergue, estado.range);
       }
     });
-  } else {
-    console.warn('Input cantidad no encontrado'); // DEBUG
   }
 
-  // Paso 2: Delegación (ya funciona)
+  // Paso 2: Delegación
   const delSelect = document.getElementById('delegacion-alo-maestro');
   if (delSelect) {
     delSelect.addEventListener('change', () => {
       if (delSelect.value) {
-        delSelect.disabled = true; // Congela
+        delSelect.disabled = true;
         const step2 = delSelect.closest('.step-container');
         if (step2) step2.classList.add('step-completed');
         completePasoAlo(albergue, 2);
         document.getElementById('delegacion-hidden-alo-maestro').value = delSelect.value;
-        // Trigger: Revalida si rango existe
         const estado = estadoCalendarioAlo[albergue];
         if (estado.range.length > 0) {
           validarLimiteRangoAlo(albergue, estado.range);
@@ -1762,30 +1813,76 @@ function setupPasoListenersAlo(albergue) {
 
   // Paso 3: Ya se maneja en handleClickDiaAlo
 
-  // Paso 4: Campos adicionales
-  ['institucion-alo-maestro', 'responsable-alo-maestro', 'contacto-alo-maestro'].forEach(id => {
+  // Paso 4: Campos adicionales (usa 'input' + 'blur' para check inmediato al tipear)
+  const camposPaso4 = ['institucion-alo-maestro', 'responsable-alo-maestro', 'dni-alo-maestro', 'contacto-alo-maestro'];
+  camposPaso4.forEach(id => {
     const input = document.getElementById(id);
     if (input) {
-      input.addEventListener('blur', () => {
-        if (input.value.trim()) {
-          completePasoAlo(albergue, 4);
-        }
-      });
+      // Evento 'input' para check al tipear (inmediato)
+      input.addEventListener('input', () => checkPaso4(albergue));
+      // Evento 'blur' para check final (redundante, pero seguro)
+      input.addEventListener('blur', () => checkPaso4(albergue));
     }
   });
-}
 
-// Función para completar un paso
+  // Función helper para check Paso 4 (llamada desde input/blur)
+  function checkPaso4(albergue) {
+    const todosLlenos = camposPaso4.every(idCheck => {
+      const el = document.getElementById(idCheck);
+      return el && el.value.trim().length > 0;
+    });
+    const btnSubmit = document.getElementById('btn-submit-alo-maestro');
+    if (todosLlenos) {
+      completePasoAlo(albergue, 4);
+      console.log('Paso 4 completado: Todos llenos (al input)'); // DEBUG
+    } else if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.setAttribute('disabled', 'disabled');
+      btnSubmit.classList.add('disabled');
+      btnSubmit.classList.remove('enabled');
+      console.log('Botón deshabilitado: Falta campo (al input)'); // DEBUG
+    }
+  }
+
+  const dniInput = document.getElementById('dni-alo-maestro');
+  if (dniInput) {
+    dniInput.placeholder = 'Ej: 12345678';
+    dniInput.min = '0';
+    dniInput.max = '99999999'; // Límite superior para 8 dígitos
+    dniInput.addEventListener('input', () => {
+      let v = dniInput.value.replace(/\D/g, ''); // Solo números (quita no-dígitos)
+      if (v.length > 8) v = v.slice(0, 8); // Corta a 8 dígitos
+      dniInput.value = v;
+      // Trigger check Paso 4 al cambiar
+      checkPaso4(albergue);
+    });
+    dniInput.addEventListener('blur', () => {
+      const v = parseInt(dniInput.value, 10);
+      if (isNaN(v) || v.toString().length !== 8) {
+        dniInput.value = ''; // Limpia si no es 8 dígitos válidos
+        showSnackbar('DNI debe ser exactamente 8 números.', 'error', 3000);
+      }
+      checkPaso4(albergue);
+    });
+}
+}
+// En completePasoAlo: Habilita al llegar a 3 pasos (ignora Paso 4 para botón)
 function completePasoAlo(albergue, pasoNum) {
   if (!pasoEstadoAlo[albergue].completed.includes(pasoNum)) {
     pasoEstadoAlo[albergue].completed.push(pasoNum);
     pasoEstadoAlo[albergue].current = Math.min(4, pasoNum + 1);
     updateProgresoAlo(albergue);
   }
-  // Habilita submit si todos completos
-  if (pasoEstadoAlo[albergue].completed.length === 4) {
+  // Habilita submit SOLO si Paso 3 completado (3 pasos, ignora Paso 4)
+  if (pasoEstadoAlo[albergue].completed.length >= 3) {
     const btnSubmit = document.getElementById('btn-submit-alo-maestro');
-    if (btnSubmit) btnSubmit.disabled = false;
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.removeAttribute('disabled');
+      btnSubmit.classList.remove('disabled');
+      btnSubmit.classList.add('enabled');
+      console.log('Botón submit habilitado: Paso 3 completado'); // DEBUG
+    }
   }
 }
 
@@ -1923,7 +2020,7 @@ function resetOcupacionUIAlo(albergue) {
 }
 
 // Interacción con GS para alojamiento (nueva action)
-/*
+
 async function enviarReservaAlojamientoAGoogleSheets(data) {
   if (!CONFIG.googleScriptUrlAlo || CONFIG.googleScriptUrlAlo.includes('undefined')) {
     console.warn('URL Alo no configurada. Simulando éxito para test.');
@@ -1936,44 +2033,8 @@ async function enviarReservaAlojamientoAGoogleSheets(data) {
     albergue: toFullName(data.albergue),
     institucion: data.institucion,
     cantidad: data.cantidad,
-    rangoFechas: data.range.join(','),
-  });
-  
-  try {
-    const response = await fetch(CONFIG.googleScriptUrlAlo, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: payload
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    
-    const text = await response.text();
-    if (!text.trim()) {
-      throw new Error('Respuesta vacía');
-    }
-    
-    return JSON.parse(text);
-  } catch (err) {
-    console.error('Envío Alo falló:', err);
-    throw err; // Propaga para manejo en submit
-  }
-}
-*/
-async function enviarReservaAlojamientoAGoogleSheets(data) {
-  if (!CONFIG.googleScriptUrlAlo || CONFIG.googleScriptUrlAlo.includes('undefined')) {
-    console.warn('URL Alo no configurada. Simulando éxito para test.');
-    return { success: true, idReserva: Math.floor(Math.random() * 10000) }; // Mock submit
-  }
-  
-  const payload = new URLSearchParams({
-    secret: CONFIG.secretKey,
-    action: "crearReservaAlojamiento",
-    albergue: toFullName(data.albergue),
-    institucion: data.institucion,
-    cantidad: data.cantidad,
+    responsable: data.responsable || '', // NUEVO: Responsable
+    dni: data.dni || '', // NUEVO: DNI
     rangoFechas: data.range.join(','),
   });
   

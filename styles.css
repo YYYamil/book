@@ -1846,3 +1846,60 @@ input[readonly], select[disabled] {
   border: 1px solid #ddd; /* Borde sutil */
   border-radius: 4px;
 }
+
+/*Flecha de limpiar todo*/
+/* Icono del botón "Limpiar Todo": Blanco y más grueso */
+.btn-reset i {
+  color: white !important; /* Blanco fijo */
+  font-weight: 900; /* Más grueso (bold máximo) */
+  font-size: 18px; /* Ligeramente más grande para visibilidad */
+  margin-right: 8px; /* Espaciado opcional del texto */
+}
+
+
+/* Fix Mobile: Campos completos en pasos 1 y 2 (evita corte) */
+@media (max-width: 480px) { /* Cubre móviles estándar */
+  .step-container.step-1 .form-row,
+  .step-container.step-2 .form-row {
+    width: 100%;
+    box-sizing: border-box; /* Incluye padding en ancho */
+    padding: 8px; /* Reduce padding para más espacio */
+    margin: 0; /* Elimina márgenes extras */
+  }
+
+  .step-container.step-1 label,
+  .step-container.step-2 label {
+    font-size: 14px; /* Texto más pequeño para labels largos */
+    line-height: 1.3; /* Menos alto para caber */
+    display: block; /* Stack vertical: Label arriba, input abajo */
+    margin-bottom: 4px;
+  }
+
+  .step-container.step-1 input[type="number"],
+  .step-container.step-2 select {
+    width: 100% !important; /* Fuerza ancho completo */
+    font-size: 16px; /* Mantiene touch-friendly para mobile */
+    padding: 8px; /* Padding interno ajustado */
+    box-sizing: border-box;
+  }
+
+  .modal-content {
+    width: 95vw; /* Modal más ancho en mobile (95% viewport) */
+    max-width: 95vw;
+    margin: 0 auto;
+  }
+
+  .modal-body {
+    padding: 10px; /* Menos padding general */
+  }
+}
+
+/* Opcional: Para tablets (480-768px) */
+@media (max-width: 768px) and (min-width: 481px) {
+  .step-container.step-1 input[type="number"],
+  .step-container.step-2 select {
+    width: 100%;
+  }
+}
+
+/*habilitar boton Reserva*/
