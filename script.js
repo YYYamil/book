@@ -2,7 +2,7 @@
 const CONFIG = {
   secretKey: "cristiano1988",
   // googleScriptUrl: "https://script.google.com/macros/s/AKfycbwUo0ouoBIxBhYl89tEy1NartJHSg-HIknuwN4Vc0YRnb601c5BDrq9-CHLNIEG1Y_L/exec",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbwkfbLPu8EjUYBZFh71clAcEO0NqoegBwXcfOAqf16dTYTstXATpI1fTVMxHKIEmwLQjw/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbxgWWIc13CwraIF2d1ZZCTf8xdsHpjG36Fh0qmVySlvDLT_OOzmWdbc8L72dSIaONcLhg/exec",
   googleScriptUrlAlo: "https://script.google.com/macros/s/AKfycbxvskDSMkR5mqtGoqal4Tfuls001kyAlSu9QVE3Q9hORer0s3-aNCyjmPgAotk1wAQb/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
@@ -614,7 +614,7 @@ function updateOcupacionUI(albergue, ocupados, capacidad) {
   if (fill) fill.style.width = `${percent}%`;
 
   const info = document.getElementById(`ocupacion-info-${albergue}`);
-  if (info) info.textContent = `${ocupados}/${capacidad} Camas ocupadas`;
+  if (info) info.textContent = `${ocupados}/${capacidad} De ocupacion`;
 }
 
 
@@ -889,30 +889,19 @@ const ALBERGUE_KEYS = ['maestro','tinku','aquilina'];
 
 function setCantidadMaxFor(albergue){
   const input = document.getElementById(`cantidad-${albergue}`);
-  const chk   = document.getElementById(`pernocta-${albergue}`);
   if (!input) return;
 
-  const pernocta = !!(chk && chk.checked);
+  // límites base (definir si no existen)
+  //const LIMITES_PERNOCTA = { maestro: 92, tinku: 49, aquilina: 58 };
 
-  // límites base
-  const maxSinPernocta = LIMITES_SIN_PERNOCTA[albergue];  // 300/100/100
-  const maxPernoctaCap = LIMITES_PERNOCTA[albergue];      // 92/49/58
+  // Tomar la disponibilidad del día (si existe). Si no hay, caer a la capacidad.
+  const disp = getDisponiblesValue(albergue); // leído del <span id="disponibles-...">
+  let max;
 
-  let max, placeholderText;
-
-  if (pernocta) {
-    // Tomar la disponibilidad del día (si existe). Si no hay, caer a la capacidad por pernocta.
-    const disp = getDisponiblesValue(albergue); // leído del <span id="disponibles-...">
-    if (Number.isFinite(disp)) {
-      max = Math.max(0, Math.min(maxPernoctaCap, disp));
-      placeholderText = `disponibles: ${disp}`;
-    } else {
-      max = maxPernoctaCap;
-      placeholderText = `máx ${maxPernoctaCap}`;
-    }
+  if (Number.isFinite(disp)) {
+    max = disp;
   } else {
-    max = maxSinPernocta;
-    placeholderText = `máx ${maxSinPernocta}`;
+    max = disp;
   }
 
   // atributos del input
@@ -920,7 +909,7 @@ function setCantidadMaxFor(albergue){
   input.max = String(max);
   input.step = '1';
   input.inputMode = 'numeric';
-  input.placeholder = placeholderText;
+  input.placeholder = ''; // No mostrar nada en el placeholder
 
   // clamp + mensaje
   let v = parseInt(input.value, 10);
@@ -931,7 +920,7 @@ function setCantidadMaxFor(albergue){
   if (v < 1) v = 1;
   if (v > max) {
     v = max;
-    input.setCustomValidity(`El máximo permitido es ${max}.`);
+    input.setCustomValidity(`El máximo permitido es ${max} (disponibles: ${disp || max}).`);
   } else {
     input.setCustomValidity('');
   }
