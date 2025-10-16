@@ -1,7 +1,8 @@
 // Configuración global
 const CONFIG = {
   secretKey: "cristiano1988",
-  googleScriptUrl: "https://script.google.com/macros/s/AKfycbwUo0ouoBIxBhYl89tEy1NartJHSg-HIknuwN4Vc0YRnb601c5BDrq9-CHLNIEG1Y_L/exec",
+  // googleScriptUrl: "https://script.google.com/macros/s/AKfycbwUo0ouoBIxBhYl89tEy1NartJHSg-HIknuwN4Vc0YRnb601c5BDrq9-CHLNIEG1Y_L/exec",
+  googleScriptUrl: "https://script.google.com/macros/s/AKfycbwkfbLPu8EjUYBZFh71clAcEO0NqoegBwXcfOAqf16dTYTstXATpI1fTVMxHKIEmwLQjw/exec",
   googleScriptUrlAlo: "https://script.google.com/macros/s/AKfycbxvskDSMkR5mqtGoqal4Tfuls001kyAlSu9QVE3Q9hORer0s3-aNCyjmPgAotk1wAQb/exec",
   meses: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
   diasSemana: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
@@ -234,7 +235,7 @@ function getFormData(albergue) {
     horaIngreso: document.getElementById(`horaIngreso-${albergue}`).value,
     horaEgreso: document.getElementById(`horaEgreso-${albergue}`).value,
     //pernocta: document.getElementById('pernocta-maestro').checked // <-- BOOLEANO nativo
-    pernocta: pernoctaValue
+    pernocta: true
 
   };
 }
@@ -260,12 +261,8 @@ function mostrarConfirmacion(albergue, formData, idReserva) {
 function resetForm(albergue) {
   const form = document.getElementById(`reservaForm${albergue.charAt(0).toUpperCase() + albergue.slice(1)}`);
   form.reset();
-  // Ensure checkbox is unchecked
-  const pernoctaCheckbox = document.getElementById(`pernocta-${albergue}`);
-  if (pernoctaCheckbox) {
-    pernoctaCheckbox.checked = false;
-  }
-  console.log(`Formulario reseteado para ${albergue}, Pernocta: ${pernoctaCheckbox ? pernoctaCheckbox.checked : 'No checkbox'}`);
+  // No hay checkbox para resetear (pernocta siempre true)
+  console.log(`Formulario reseteado para ${albergue}, Pernocta: true (siempre activado)`);
 }
 
 
@@ -1000,9 +997,9 @@ function applyHospedajeState(albergue){
     if (selEg.value && selEg.value !== 'Hospedarse') {
       selEg.dataset.prevValue = selEg.value;
     }
-    selEg.value = 'Hospedarse';
-    selEg.disabled = true;              // bloquea interacción
-    selEg.classList.add('locked-select');
+    // selEg.value = 'Hospedarse';
+    // selEg.disabled = true;              // bloquea interacción
+    // selEg.classList.add('locked-select');
   } else {
     selEg.disabled = false;
     selEg.classList.remove('locked-select');
@@ -1661,9 +1658,9 @@ async function handleClickDiaAlo(albergue, iso, cell) {
         resetRangoAlo(albergue);
         return;
       }
+      // TEMPORAL: Highlight celeste antes de check
       updateCalendarHighlightsAlo(albergue);
       updateRangeDisplay(albergue, estado.range);
-      
       // UNA SOLA BÚSQUEDA: Solo aquí, después del segundo click (rango completo)
       try {
         await mostrarInfoRangoAlo(albergue, estado.range);

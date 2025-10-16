@@ -109,8 +109,8 @@
 
                     </div>
                     <button class="btn-reservar" onclick="openModal('maestro')">Reservar Visita</button>
-                    <!-- Nuevo Boton alojamiento -->
-                    <!-- <button class="btn-alo" onclick="openAlojamientoModal('maestro')">Reserva Alojamiento</button> -->
+                    
+                    <!-- Nuevo Boton alojamiento -->                    
                     <button class="btn-alo" data-albergue="maestro">Reserva Alojamiento</button>
                     <div class="map-container">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3558.3469779765946!2d-65.19288722381081!3d-26.89248109236016!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94225a28fd68b2a5%3A0x9e70e2029ffb5445!2sAlbergue%20Maestro%20Jos%C3%A9%20Fierro!5e0!3m2!1sen!2sar!4v1753473767982!5m2!1sen!2sar" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -269,7 +269,7 @@
 
 
 
-    <!-- Modal para VISITA Albergue Maestro José Fierro -->
+    <!-- VISITA Modal para  Albergue Maestro José Fierro -->
                    <div id="modal-maestro" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -327,22 +327,7 @@
                     <input type="text" id="responsable-maestro" class="form-control" required>
                   </div>
 
-                  <!-- Fila 2: Contacto | Cantidad + switch pernocta compactos -->
-                  <!-- <div class="form-group">
-                    <label for="contacto-maestro">Contacto (Número Telefónico)</label>
-                    <input type="tel" id="contacto-maestro" class="form-control" required>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="cantidad-maestro">Cantidad de Personas</label>
-                    <div class="input-row">
-                      <input type="number" id="cantidad-maestro" class="form-control" min="1" max="92" required>
-                      <label for="pernocta-maestro" class="check-inline">
-                        <input type="checkbox" id="pernocta-maestro">
-                        <span>Reserva camas?</span>
-                      </label>
-                    </div>
-                  </div> -->
+                  
 
                   <div class="form-row-qty">
               <div class="form-group">
@@ -350,12 +335,12 @@
                 <input type="tel" id="contacto-maestro" class="form-control" required>
               </div>
 
-              <div class="form-group check-cell">
+              <!-- <div class="form-group check-cell">
                 <label for="pernocta-maestro" class="check-inline">
                   <input type="checkbox" id="pernocta-maestro">
                   <span>Reserva camas?</span>
                 </label>
-              </div>
+              </div> -->
 
               <div class="form-group">
                 <label for="cantidad-maestro">Cantidad de Personas</label>
@@ -397,9 +382,9 @@
 
       
 
-    <!-- Nuevo modal para RESERVA Alojamiento  -->
+   
 
-<!-- Modal para Reserva Alojamiento - Maestro José Fierro -->
+<!-- NUEVO Modal para Reserva Alojamiento - Maestro José Fierro -->
 <div id="modal-alojamiento-maestro" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -424,7 +409,7 @@
                 <div class="form-row">
                     <label for="cantidad-alo-maestro">
                         <i class="fas fa-bed"></i>
-                        1. Ingrese cantidad de camas a reservar:
+                        1. Cantidad de camas a reservar:
                     </label>
                     <input type="number" id="cantidad-alo-maestro" name="cantidad" min="1" max="92" required placeholder="máx. 92">
                 </div>
